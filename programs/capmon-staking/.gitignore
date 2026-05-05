@@ -6,3 +6,11 @@ node_modules
 test-ledger
 .yarn
 .surfpool
+
+# Environment variables (contains API keys)
+.env
+
+# Tree state
+tree-state.json
+
+mint-state.json
