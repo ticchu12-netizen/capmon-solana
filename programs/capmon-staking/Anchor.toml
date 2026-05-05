@@ -8,11 +8,14 @@ skip-lint = false
 [programs.localnet]
 capmon_staking = "FSenbAEVTgTdfM2723xkk8A2Y5oD8wtmB2EhiWXzpqSg"
 
+[programs.devnet]
+capmon_staking = "FSenbAEVTgTdfM2723xkk8A2Y5oD8wtmB2EhiWXzpqSg"
+
 [provider]
-cluster = "localnet"
+cluster = "devnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
-test = "cargo test"
+test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
 
 [hooks]
