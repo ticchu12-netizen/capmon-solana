@@ -35,8 +35,8 @@ pub const KING_BRAIN_FIXED: u32 = 60_000_000;
 // ===== External program IDs =====
 // SPL Account Compression program (handles Merkle tree state for cNFTs)
 pub const SPL_ACCOUNT_COMPRESSION_ID: Pubkey =
-    pubkey!("cmtDvXumGCrqC1Age74AVPhSRVXJMd8PJS91L8KbNCK");
+    pubkey!("mcmt6YrQEMKw8Mw43FmpRLmf7BqRnFMKmAcbxE3xkAW");
 
 // SPL Noop program (Bubblegum logs state changes here)
 pub const SPL_NOOP_ID: Pubkey =
-    pubkey!("noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV");
+    pubkey!("mnoopTCrg4p8ry25e4bcWA9XZjbNjMTfgYVGGEdRsf3");
