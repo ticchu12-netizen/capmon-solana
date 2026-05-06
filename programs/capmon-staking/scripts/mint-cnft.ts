@@ -1,11 +1,13 @@
 /**
  * Mints a test V2 compressed NFT into the previously-created Merkle tree.
  *
- * The cNFT is minted to the wallet's address (the wallet becomes the leaf owner).
- * Saves the asset_id and leaf_index to mint-state.json for use by stake.test.ts.
+ * Default: cNFT minted to the CLI wallet (becomes leaf owner).
+ * With CLI arg: cNFT minted to the specified recipient pubkey.
+ * The CLI wallet always remains the fee payer + tree authority signer.
  *
  * Usage:
- *   npx ts-node scripts/mint-cnft.ts
+ *   npx ts-node scripts/mint-cnft.ts                    # mints to CLI wallet
+ *   npx ts-node scripts/mint-cnft.ts <RECIPIENT_PUBKEY> # mints to external wallet
  */
 
 import { createUmi } from "@metaplex-foundation/umi-bundle-defaults";
@@ -37,30 +39,34 @@ async function main() {
     rpcUrl.replace(/api-key=[^&]*/, "api-key=REDACTED")
   );
 
-  // Set up Umi
   const umi = createUmi(rpcUrl).use(mplBubblegum()).use(dasApi());
 
-  // Load wallet
   const walletKeyBytes = JSON.parse(readFileSync(walletPath, "utf-8"));
   const walletKeypair = umi.eddsa.createKeypairFromSecretKey(
     new Uint8Array(walletKeyBytes)
   );
   umi.use(keypairIdentity(walletKeypair));
 
-  console.log("Wallet:", walletKeypair.publicKey);
+  console.log("Fee payer / signer:", walletKeypair.publicKey);
 
-  // Load tree state
+  const recipientArg = process.argv[2];
+  const recipient = recipientArg
+    ? publicKey(recipientArg)
+    : walletKeypair.publicKey;
+  console.log("Recipient (leaf owner):", recipient);
+  if (recipientArg) {
+    console.log("  -> minting to external wallet");
+  }
+
   const treeState = JSON.parse(readFileSync("tree-state.json", "utf-8"));
   const merkleTree = publicKey(treeState.treeAddress);
   console.log("Minting into tree:", merkleTree);
 
-  // Mint metadata. For testing we use placeholder values.
-  // For real Capmon NFTs the URI would point to Arweave.
   const metadata = {
-    name: "Capmon Test #1",
+    name: "Capmon Test cNFT",
     symbol: "CAPMON",
-    uri: "https://arweave.net/placeholder", // valid URI required by Bubblegum, but content doesn't have to exist
-    sellerFeeBasisPoints: 500, // 5%
+    uri: "https://arweave.net/placeholder",
+    sellerFeeBasisPoints: 500,
     collection: null,
     creators: [],
   };
@@ -68,7 +74,7 @@ async function main() {
   console.log("Minting cNFT...");
 
   const mintBuilder = await mintV2(umi, {
-    leafOwner: walletKeypair.publicKey,
+    leafOwner: recipient,
     merkleTree,
     metadata,
   });
@@ -79,9 +85,6 @@ async function main() {
 
   console.log("Mint transaction confirmed.");
 
-  // Parse the leaf from the transaction to get the asset_id and leaf index.
-  // Retry because Helius RPC sometimes has a brief lag between confirming
-  // and serving the tx via getTransaction.
   let leaf = null;
   for (let attempt = 1; attempt <= 10; attempt++) {
     try {
@@ -95,24 +98,25 @@ async function main() {
   }
   if (!leaf) throw new Error("Failed to parse leaf after 10 attempts");
   console.log("Leaf:", leaf);
-  // Derive the asset ID (the cNFT's unique identifier)
+
   const [assetId, _bump] = findLeafAssetIdPda(umi, {
     merkleTree,
     leafIndex: leaf.nonce,
   });
 
   console.log("");
-  console.log("✅ cNFT minted!");
+  console.log("cNFT minted!");
   console.log("   Asset ID:", assetId);
   console.log("   Leaf index:", leaf.nonce.toString());
-  console.log("   Owner:", walletKeypair.publicKey);
-  console.log(`   View on explorer: https://explorer.solana.com/address/${assetId}?cluster=devnet`);
+  console.log("   Owner:", recipient);
+  console.log(
+    `   Explorer: https://explorer.solana.com/address/${assetId}?cluster=devnet`
+  );
 
-  // Save state for use by stake.test.ts
   const mintState = {
     assetId: assetId.toString(),
     leafIndex: leaf.nonce.toString(),
-    leafOwner: walletKeypair.publicKey,
+    leafOwner: recipient.toString(),
     merkleTree: merkleTree.toString(),
     mintedAt: new Date().toISOString(),
   };

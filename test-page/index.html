@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capmon — On-Chain Test</title>
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --card: #141414;
+            --border: #262626;
+            --text: #ffffff;
+            --muted: #888888;
+            --solana-purple: #9945FF;
+            --solana-green: #14F195;
+            --err: #ff5577;
+            --warn: #ffaa00;
+        }
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+        .container { max-width: 720px; width: 100%; }
+        h1 {
+            background: linear-gradient(90deg, var(--solana-purple) 0%, var(--solana-green) 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-size: 3rem;
+            margin: 0 0 8px 0;
+            text-align: center;
+        }
+        .subtitle { color: var(--muted); margin: 0 0 32px 0; text-align: center; }
+        .actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 16px; align-items: center; }
+        button, select {
+            background: var(--solana-purple);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.15s;
+            font-family: inherit;
+        }
+        button:hover:not(:disabled) { opacity: 0.85; }
+        button:disabled { opacity: 0.4; cursor: not-allowed; }
+        button.secondary, select { background: var(--card); border: 1px solid var(--border); }
+        button.danger { background: #ff5577; }
+        select { padding: 12px 16px; }
+        label { color: var(--muted); font-size: 13px; }
+        .tier-row { display: flex; gap: 12px; justify-content: center; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+        .status {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            font-family: 'SF Mono', 'Menlo', 'Consolas', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-break: break-all;
+            min-height: 200px;
+        }
+        .status .ok { color: var(--solana-green); }
+        .status .err { color: var(--err); }
+        .status .warn { color: var(--warn); }
+        .status .muted { color: var(--muted); }
+        .status .divider { border-top: 1px solid var(--border); margin: 8px 0; padding: 0; height: 0; }
+        .status .header { color: var(--solana-purple); font-weight: 600; margin-top: 4px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Capmon</h1>
+        <p class="subtitle">On-chain devnet · Day 4 · stake + unstake</p>
+
+        <div class="actions">
+            <button id="connectBtn">Connect Phantom</button>
+            <button id="testProgramBtn" class="secondary" disabled>Test program</button>
+            <button id="fetchCnftsBtn" class="secondary" disabled>Show my cNFTs</button>
+            <button id="resetBtn" class="secondary">Reset</button>
+        </div>
+
+        <div class="tier-row">
+            <label for="tierSelect">Tier:</label>
+            <select id="tierSelect">
+                <option value="0">0 · Evergreen (0M)</option>
+                <option value="1">1 · Aquashrine (15M)</option>
+                <option value="2">2 · Magmamine (40M)</option>
+                <option value="3">3 · King (55M)</option>
+            </select>
+            <button id="mintBtn">Mint Demo cNFT</button>
+            <button id="stakeBtn" disabled>Stake first cNFT</button>
+            <button id="unstakeBtn" class="danger" disabled>Unstake first staked cNFT</button>
+        </div>
+
+        <div class="status" id="status">Ready. Click "Connect Phantom" to begin.</div>
+    </div>
+
+    <script type="module">
+        import { Connection, PublicKey, Transaction, ComputeBudgetProgram, SystemProgram } from 'https://esm.sh/@solana/web3.js@1.95.4';
+        import * as anchor from 'https://esm.sh/@anchor-lang/core';
+        import BN from 'https://esm.sh/bn.js@5';
+
+        const RPC_ENDPOINT = 'https://devnet.helius-rpc.com/?api-key=cfd79774-43dd-4cf4-a2dd-aefefe55e6f1';
+        const HELIUS_RPC_URL = 'https://devnet.helius-rpc.com/?api-key=cfd79774-43dd-4cf4-a2dd-aefefe55e6f1';
+        const PROGRAM_ID = new PublicKey('FSenbAEVTgTdfM2723xkk8A2Y5oD8wtmB2EhiWXzpqSg');
+        const PROGRAM_CONFIG_PDA = new PublicKey('2cJ12fXKyuFxJZ3PpQ4m6kBkgoUFtRoSQccKMZ9MrRZj');
+        const STAKE_AUTHORITY_PDA = new PublicKey('8phyp78BGVaKP5PCombtiQhUFe6XK5b1AK7QUcruSNfp');
+        const MERKLE_TREE = 'HfJRvkEBukPK5tvDPAvCsa2ufnrXy3S1xwsuspfWTgQa';
+        const BUBBLEGUM_PROGRAM_ID = new PublicKey('BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY');
+        const COMPRESSION_PROGRAM_ID = new PublicKey('mcmt6YrQEMKw8Mw43FmpRLmf7BqRnFMKmAcbxE3xkAW');
+        const NOOP_PROGRAM_ID = new PublicKey('mnoopTCrg4p8ry25e4bcWA9XZjbNjMTfgYVGGEdRsf3');
+        const MINT_FUNCTION_URL = 'https://us-central1-capmon-hackathon.cloudfunctions.net/mintCapmonCnft';
+
+        const connection = new Connection(RPC_ENDPOINT, 'confirmed');
+        const statusEl = document.getElementById('status');
+        const connectBtn = document.getElementById('connectBtn');
+        const testProgramBtn = document.getElementById('testProgramBtn');
+        const fetchCnftsBtn = document.getElementById('fetchCnftsBtn');
+        const mintBtn = document.getElementById('mintBtn');
+        const stakeBtn = document.getElementById('stakeBtn');
+        const unstakeBtn = document.getElementById('unstakeBtn');
+        const tierSelect = document.getElementById('tierSelect');
+        const resetBtn = document.getElementById('resetBtn');
+
+        let walletPubkey = null;
+        let program = null;
+        let userAssets = [];
+
+        function log(msg, cls) {
+            const div = document.createElement('div');
+            if (cls) div.className = cls;
+            div.textContent = msg;
+            statusEl.appendChild(div);
+        }
+        function divider() {
+            const div = document.createElement('div');
+            div.className = 'divider';
+            statusEl.appendChild(div);
+        }
+        function clearLog() { statusEl.innerHTML = ''; }
+
+        async function loadIdlAndInitProgram() {
+            const idlResp = await fetch('./capmon_staking.json');
+            if (!idlResp.ok) throw new Error('Failed to fetch IDL');
+            const idl = await idlResp.json();
+
+            const wallet = {
+                publicKey: walletPubkey,
+                signTransaction: async (tx) => await window.phantom.solana.signTransaction(tx),
+                signAllTransactions: async (txs) => await window.phantom.solana.signAllTransactions(txs),
+            };
+
+            const provider = new anchor.AnchorProvider(connection, wallet, {
+                commitment: 'confirmed',
+                preflightCommitment: 'confirmed',
+            });
+
+            program = new anchor.Program(idl, provider);
+            log('IDL loaded, Anchor program ready', 'ok');
+            log('   programId: ' + program.programId.toBase58(), 'muted');
+        }
+
+        async function fetchAssetAndProof(assetId) {
+            const [assetData, proofData] = await Promise.all([
+                fetch(HELIUS_RPC_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ jsonrpc: '2.0', id: '1', method: 'getAsset', params: { id: assetId } })
+                }).then(r => r.json()),
+                fetch(HELIUS_RPC_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ jsonrpc: '2.0', id: '1', method: 'getAssetProof', params: { id: assetId } })
+                }).then(r => r.json())
+            ]);
+            if (assetData.error) throw new Error('getAsset: ' + assetData.error.message);
+            if (proofData.error) throw new Error('getAssetProof: ' + proofData.error.message);
+            return { fullAsset: assetData.result, proof: proofData.result };
+        }
+
+        function buildPDAs(merkleTree, nftAssetId) {
+            const [stakeAuthority] = PublicKey.findProgramAddressSync(
+                [new TextEncoder().encode('stake_authority')],
+                program.programId
+            );
+            const [stakeRecord] = PublicKey.findProgramAddressSync(
+                [
+                    new TextEncoder().encode('stake_record'),
+                    walletPubkey.toBytes(),
+                    nftAssetId.toBytes(),
+                ],
+                program.programId
+            );
+            const [treeConfig] = PublicKey.findProgramAddressSync(
+                [merkleTree.toBytes()],
+                BUBBLEGUM_PROGRAM_ID
+            );
+            return { stakeAuthority, stakeRecord, treeConfig };
+        }
+
+        async function signSendConfirm(ixs) {
+            const tx = new Transaction();
+            tx.add(ComputeBudgetProgram.setComputeUnitLimit({ units: 400_000 }));
+            ixs.forEach(ix => tx.add(ix));
+            const { blockhash } = await connection.getLatestBlockhash();
+            tx.recentBlockhash = blockhash;
+            tx.feePayer = walletPubkey;
+            log('Signing with Phantom...', 'warn');
+            const signed = await window.phantom.solana.signTransaction(tx);
+            log('Sending raw transaction...', 'warn');
+            let signature;
+            try {
+                signature = await connection.sendRawTransaction(signed.serialize(), {
+                    skipPreflight: false,
+                    preflightCommitment: 'confirmed',
+                });
+            } catch (err) {
+                log('Preflight failed:', 'err');
+                if (err.logs) {
+                    err.logs.forEach(l => log('   ' + l, 'muted'));
+                } else {
+                    log('   ' + (err.message || err), 'muted');
+                }
+                throw err;
+            }
+            log('Sent. Sig: ' + signature.slice(0, 20) + '...', 'muted');
+            log('Waiting for confirmation...', 'warn');
+            const conf = await connection.confirmTransaction(signature, 'confirmed');
+            if (conf.value.err) {
+                try {
+                    const txInfo = await connection.getTransaction(signature, { commitment: 'confirmed', maxSupportedTransactionVersion: 0 });
+                    if (txInfo && txInfo.meta && txInfo.meta.logMessages) {
+                        log('On-chain logs:', 'err');
+                        txInfo.meta.logMessages.forEach(l => log('   ' + l, 'muted'));
+                    }
+                } catch (e) {}
+                throw new Error('Tx failed: ' + JSON.stringify(conf.value.err));
+            }
+            return signature;
+        }
+
+        connectBtn.addEventListener('click', async () => {
+            clearLog();
+            log('Connecting to Phantom...', 'warn');
+            if (!window.phantom?.solana) { log('Phantom not detected.', 'err'); return; }
+            try {
+                const resp = await window.phantom.solana.connect();
+                walletPubkey = resp.publicKey;
+                log('Wallet connected', 'ok');
+                log('   ' + walletPubkey.toBase58(), 'muted');
+                const lamports = await connection.getBalance(walletPubkey);
+                log('Devnet RPC reachable, SOL balance: ' + (lamports / 1_000_000_000).toFixed(4), 'ok');
+                await loadIdlAndInitProgram();
+                testProgramBtn.disabled = false;
+                fetchCnftsBtn.disabled = false;
+                connectBtn.textContent = 'Connected';
+                connectBtn.disabled = true;
+            } catch (err) {
+                log('Connect failed: ' + err.message, 'err');
+                console.error(err);
+            }
+        });
+
+        testProgramBtn.addEventListener('click', async () => {
+            divider();
+            log('Testing capmon-staking program on devnet...', 'warn');
+            try {
+                const programInfo = await connection.getAccountInfo(PROGRAM_ID);
+                if (!programInfo || !programInfo.executable) { log('Program not deployed', 'err'); return; }
+                log('Program deployed and executable', 'ok');
+                const configInfo = await connection.getAccountInfo(PROGRAM_CONFIG_PDA);
+                if (!configInfo || !configInfo.owner.equals(PROGRAM_ID)) { log('ProgramConfig PDA bad', 'err'); return; }
+                log('ProgramConfig PDA verified', 'ok');
+                const authInfo = await connection.getAccountInfo(STAKE_AUTHORITY_PDA);
+                if (!authInfo || !authInfo.owner.equals(PROGRAM_ID)) { log('StakeAuthority PDA bad', 'err'); return; }
+                log('StakeAuthority PDA verified', 'ok');
+                divider();
+                log('Full on-chain stack validated', 'ok');
+            } catch (err) {
+                log('Test failed: ' + err.message, 'err');
+                console.error(err);
+            }
+        });
+
+        fetchCnftsBtn.addEventListener('click', async () => {
+            divider();
+            log('Fetching cNFTs from Helius DAS...', 'warn');
+            try {
+                const response = await fetch(HELIUS_RPC_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        jsonrpc: '2.0', id: 'getAssetsByOwner', method: 'getAssetsByOwner',
+                        params: { ownerAddress: walletPubkey.toBase58(), page: 1, limit: 100 }
+                    })
+                });
+                const data = await response.json();
+                if (data.error) { log('DAS error: ' + data.error.message, 'err'); return; }
+                const allAssets = data.result?.items || [];
+                log('DAS returned ' + allAssets.length + ' total asset(s)', 'ok');
+                userAssets = allAssets.filter(a =>
+                    a.compression?.compressed === true && a.compression?.tree === MERKLE_TREE
+                );
+                log(userAssets.length + ' Capmon cNFT(s) in our merkle tree', 'ok');
+                if (userAssets.length === 0) { stakeBtn.disabled = true; unstakeBtn.disabled = true; return; }
+                divider();
+                let stakeableCount = 0, stakedCount = 0;
+                userAssets.forEach((asset, i) => {
+                    const isStaked = asset.ownership.frozen === true;
+                    const hasOrphanDelegate = !isStaked && asset.ownership.delegate && asset.ownership.delegate !== asset.ownership.owner;
+                    const isStakeable = !isStaked && !hasOrphanDelegate;
+                    if (isStaked) stakedCount++;
+                    if (isStakeable) stakeableCount++;
+                    log('Capmon cNFT #' + (i + 1) + (isStaked ? ' (STAKED)' : (hasOrphanDelegate ? ' (post-unstake, delegate persists)' : '')), 'header');
+                    log('   Name: ' + (asset.content?.metadata?.name || '(unnamed)'), 'muted');
+                    log('   Asset ID: ' + asset.id, 'muted');
+                    log('   Leaf: ' + asset.compression.leaf_id, 'muted');
+                    if (isStaked) log('   Delegate: ' + asset.ownership.delegate.slice(0, 16) + '...', 'warn');
+                });
+                stakeBtn.disabled = stakeableCount === 0;
+                unstakeBtn.disabled = stakedCount === 0;
+            } catch (err) {
+                log('Fetch failed: ' + err.message, 'err');
+                console.error(err);
+            }
+        });
+
+        stakeBtn.addEventListener('click', async () => {
+            if (!program) { log('Program not initialized', 'err'); return; }
+            const asset = userAssets.find(a => a.ownership.frozen !== true && (!a.ownership.delegate || a.ownership.delegate === a.ownership.owner));
+            if (!asset) { log('No unstaked cNFTs', 'err'); return; }
+            const tier = parseInt(tierSelect.value);
+            divider();
+            log('Staking ' + asset.id.slice(0, 8) + '... at tier ' + tier, 'warn');
+            try {
+                log('Fetching asset and merkle proof...', 'muted');
+                const { fullAsset, proof } = await fetchAssetAndProof(asset.id);
+                log('   Proof depth: ' + proof.proof.length, 'muted');
+
+                const rootBytes = Array.from(new PublicKey(proof.root).toBytes());
+                const dataHashBytes = Array.from(new PublicKey(fullAsset.compression.data_hash).toBytes());
+                const creatorHashBytes = Array.from(new PublicKey(fullAsset.compression.creator_hash).toBytes());
+                const merkleTree = new PublicKey(asset.compression.tree);
+                const nftAssetId = new PublicKey(asset.id);
+                const leafId = asset.compression.leaf_id;
+
+                const { stakeAuthority, stakeRecord, treeConfig } = buildPDAs(merkleTree, nftAssetId);
+                log('   StakeRecord: ' + stakeRecord.toBase58().slice(0, 16) + '...', 'muted');
+
+                const remainingAccounts = proof.proof.map(node => ({
+                    pubkey: new PublicKey(node), isWritable: false, isSigner: false,
+                }));
+
+                const params = {
+                    tier, root: rootBytes, dataHash: dataHashBytes, creatorHash: creatorHashBytes,
+                    nonce: new BN(leafId), index: leafId,
+                };
+
+                log('Building stake instruction...', 'muted');
+                const ix = await program.methods.stake(params).accounts({
+                    owner: walletPubkey, stakeAuthority, stakeRecord, nftAssetId, treeConfig, merkleTree,
+                    bubblegumProgram: BUBBLEGUM_PROGRAM_ID, compressionProgram: COMPRESSION_PROGRAM_ID,
+                    logWrapper: NOOP_PROGRAM_ID, systemProgram: SystemProgram.programId,
+                }).remainingAccounts(remainingAccounts).instruction();
+
+                const sig = await signSendConfirm([ix]);
+                log('Staked!', 'ok');
+                log('   Explorer: https://explorer.solana.com/tx/' + sig + '?cluster=devnet', 'muted');
+
+                log('Verifying StakeRecord on-chain...', 'muted');
+                const record = await program.account.stakeRecord.fetch(stakeRecord);
+                log('   tier: ' + record.tier + ' · brain_steps: ' + record.brainSteps, 'muted');
+                log('Stake verified', 'ok');
+            } catch (err) {
+                log('Stake failed: ' + err.message, 'err');
+                if (err.logs) err.logs.forEach(l => log('   ' + l, 'muted'));
+                console.error(err);
+            }
+        });
+
+        unstakeBtn.addEventListener('click', async () => {
+            if (!program) { log('Program not initialized', 'err'); return; }
+            const asset = userAssets.find(a => a.ownership.frozen === true);
+            if (!asset) { log('No staked cNFTs to unstake', 'err'); return; }
+            divider();
+            log('Unstaking ' + asset.id.slice(0, 8) + '...', 'warn');
+            try {
+                log('Fetching asset and merkle proof...', 'muted');
+                const { fullAsset, proof } = await fetchAssetAndProof(asset.id);
+                log('   Proof depth: ' + proof.proof.length, 'muted');
+
+                const rootBytes = Array.from(new PublicKey(proof.root).toBytes());
+                const dataHashBytes = Array.from(new PublicKey(fullAsset.compression.data_hash).toBytes());
+                const creatorHashBytes = Array.from(new PublicKey(fullAsset.compression.creator_hash).toBytes());
+                const merkleTree = new PublicKey(asset.compression.tree);
+                const nftAssetId = new PublicKey(asset.id);
+                const leafId = asset.compression.leaf_id;
+
+                const { stakeAuthority, stakeRecord, treeConfig } = buildPDAs(merkleTree, nftAssetId);
+                log('   StakeRecord: ' + stakeRecord.toBase58().slice(0, 16) + '...', 'muted');
+
+                const remainingAccounts = proof.proof.map(node => ({
+                    pubkey: new PublicKey(node), isWritable: false, isSigner: false,
+                }));
+
+                const assetDataHashBytes = Array.from(new PublicKey(fullAsset.compression.asset_data_hash).toBytes());
+                const flags = fullAsset.compression.flags;
+                log('   asset_data_hash: ' + fullAsset.compression.asset_data_hash.slice(0, 16) + '... · flags: ' + flags, 'muted');
+
+                const params = {
+                    root: rootBytes, dataHash: dataHashBytes, creatorHash: creatorHashBytes,
+                    assetDataHash: assetDataHashBytes, flags: flags,
+                    nonce: new BN(leafId), index: leafId,
+                };
+
+                log('Building unstake instruction...', 'muted');
+                const ix = await program.methods.unstake(params).accounts({
+                    owner: walletPubkey, stakeAuthority, stakeRecord, nftAssetId, treeConfig, merkleTree,
+                    bubblegumProgram: BUBBLEGUM_PROGRAM_ID, compressionProgram: COMPRESSION_PROGRAM_ID,
+                    logWrapper: NOOP_PROGRAM_ID, systemProgram: SystemProgram.programId,
+                }).remainingAccounts(remainingAccounts).instruction();
+
+                const sig = await signSendConfirm([ix]);
+                log('Unstaked!', 'ok');
+                log('   Explorer: https://explorer.solana.com/tx/' + sig + '?cluster=devnet', 'muted');
+                log('   StakeRecord PDA closed, rent refunded', 'muted');
+                log('Refreshing cNFT list...', 'muted');
+                fetchCnftsBtn.click();
+            } catch (err) {
+                log('Unstake failed: ' + err.message, 'err');
+                if (err.logs) err.logs.forEach(l => log('   ' + l, 'muted'));
+                console.error(err);
+            }
+        });
+
+        mintBtn.addEventListener('click', async () => {
+            if (!walletPubkey) { log('Connect Phantom first', 'err'); return; }
+            divider();
+            log('Minting demo cNFT to your wallet...', 'warn');
+            log('   (first call cold-starts ~20s; subsequent calls ~3s)', 'muted');
+            mintBtn.disabled = true;
+            try {
+                const response = await fetch(MINT_FUNCTION_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ recipient: walletPubkey.toBase58() })
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    log('Mint failed: ' + (data.error || 'Unknown'), 'err');
+                    if (data.details) log('   ' + data.details, 'muted');
+                    return;
+                }
+                log('Minted!', 'ok');
+                log('   Asset ID: ' + data.assetId, 'muted');
+                log('   Leaf index: ' + data.leafIndex, 'muted');
+                log('   Explorer: ' + data.explorer, 'muted');
+                log('Refreshing cNFT list...', 'muted');
+                fetchCnftsBtn.click();
+            } catch (err) {
+                log('Mint failed: ' + err.message, 'err');
+                console.error(err);
+            } finally {
+                mintBtn.disabled = false;
+            }
+        });
+
+        resetBtn.addEventListener('click', () => {
+            walletPubkey = null;
+            program = null;
+            userAssets = [];
+            connectBtn.textContent = 'Connect Phantom';
+            connectBtn.disabled = false;
+            testProgramBtn.disabled = true;
+            fetchCnftsBtn.disabled = true;
+            stakeBtn.disabled = true;
+            unstakeBtn.disabled = true;
+            clearLog();
+            log('Ready. Click "Connect Phantom" to begin.');
+        });
+    </script>
+</body>
+</html>

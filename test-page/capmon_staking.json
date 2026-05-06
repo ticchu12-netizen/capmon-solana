@@ -1,0 +1,1215 @@
+{
+  "address": "FSenbAEVTgTdfM2723xkk8A2Y5oD8wtmB2EhiWXzpqSg",
+  "metadata": {
+    "name": "capmon_staking",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Tier-aware Capmon NFT staking with on-chain brain progression"
+  },
+  "instructions": [
+    {
+      "name": "admin_unstake",
+      "docs": [
+        "Admin emergency unstake (escape hatch)."
+      ],
+      "discriminator": [
+        212,
+        74,
+        91,
+        240,
+        232,
+        55,
+        246,
+        240
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "owner",
+          "writable": true
+        },
+        {
+          "name": "program_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  103,
+                  114,
+                  97,
+                  109,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "stake_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  116,
+                  97,
+                  107,
+                  101,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "stake_record",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  116,
+                  97,
+                  107,
+                  101,
+                  95,
+                  114,
+                  101,
+                  99,
+                  111,
+                  114,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "owner"
+              },
+              {
+                "kind": "account",
+                "path": "nft_asset_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "nft_asset_id"
+        },
+        {
+          "name": "tree_config",
+          "writable": true
+        },
+        {
+          "name": "merkle_tree",
+          "writable": true
+        },
+        {
+          "name": "bubblegum_program",
+          "address": "BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY"
+        },
+        {
+          "name": "compression_program",
+          "address": "mcmt6YrQEMKw8Mw43FmpRLmf7BqRnFMKmAcbxE3xkAW"
+        },
+        {
+          "name": "log_wrapper",
+          "address": "mnoopTCrg4p8ry25e4bcWA9XZjbNjMTfgYVGGEdRsf3"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "AdminUnstakeParams"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "initialize",
+      "docs": [
+        "One-time bootstrap: creates the StakeAuthority PDA."
+      ],
+      "discriminator": [
+        175,
+        175,
+        109,
+        31,
+        13,
+        152,
+        155,
+        237
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "stake_authority",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  116,
+                  97,
+                  107,
+                  101,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "initialize_config",
+      "docs": [
+        "One-time bootstrap: creates the ProgramConfig PDA."
+      ],
+      "discriminator": [
+        208,
+        127,
+        21,
+        1,
+        194,
+        190,
+        196,
+        70
+      ],
+      "accounts": [
+        {
+          "name": "deployer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "program_config",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  103,
+                  114,
+                  97,
+                  109,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "stake",
+      "docs": [
+        "User stakes a cNFT (delegate + freeze in one atomic CPI to Bubblegum V2)."
+      ],
+      "discriminator": [
+        206,
+        176,
+        202,
+        18,
+        200,
+        209,
+        179,
+        108
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "stake_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  116,
+                  97,
+                  107,
+                  101,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "stake_record",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  116,
+                  97,
+                  107,
+                  101,
+                  95,
+                  114,
+                  101,
+                  99,
+                  111,
+                  114,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "owner"
+              },
+              {
+                "kind": "account",
+                "path": "nft_asset_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "nft_asset_id"
+        },
+        {
+          "name": "tree_config",
+          "writable": true
+        },
+        {
+          "name": "merkle_tree",
+          "writable": true
+        },
+        {
+          "name": "bubblegum_program",
+          "address": "BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY"
+        },
+        {
+          "name": "compression_program",
+          "address": "mcmt6YrQEMKw8Mw43FmpRLmf7BqRnFMKmAcbxE3xkAW"
+        },
+        {
+          "name": "log_wrapper",
+          "address": "mnoopTCrg4p8ry25e4bcWA9XZjbNjMTfgYVGGEdRsf3"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "StakeParams"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "unstake",
+      "docs": [
+        "User unstakes their cNFT (thaw + revoke + close StakeRecord)."
+      ],
+      "discriminator": [
+        90,
+        95,
+        107,
+        42,
+        205,
+        124,
+        50,
+        225
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "stake_authority",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  116,
+                  97,
+                  107,
+                  101,
+                  95,
+                  97,
+                  117,
+                  116,
+                  104,
+                  111,
+                  114,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "stake_record",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  116,
+                  97,
+                  107,
+                  101,
+                  95,
+                  114,
+                  101,
+                  99,
+                  111,
+                  114,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "owner"
+              },
+              {
+                "kind": "account",
+                "path": "nft_asset_id"
+              }
+            ]
+          }
+        },
+        {
+          "name": "nft_asset_id"
+        },
+        {
+          "name": "tree_config",
+          "writable": true
+        },
+        {
+          "name": "merkle_tree",
+          "writable": true
+        },
+        {
+          "name": "bubblegum_program",
+          "address": "BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY"
+        },
+        {
+          "name": "compression_program",
+          "address": "mcmt6YrQEMKw8Mw43FmpRLmf7BqRnFMKmAcbxE3xkAW"
+        },
+        {
+          "name": "log_wrapper",
+          "address": "mnoopTCrg4p8ry25e4bcWA9XZjbNjMTfgYVGGEdRsf3"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "UnstakeParams"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "update_tier",
+      "docs": [
+        "Admin tier correction. Resets brain_steps to new tier's floor."
+      ],
+      "discriminator": [
+        22,
+        250,
+        234,
+        251,
+        201,
+        246,
+        98,
+        116
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "program_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  103,
+                  114,
+                  97,
+                  109,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "owner"
+        },
+        {
+          "name": "nft_asset_id"
+        },
+        {
+          "name": "stake_record",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  116,
+                  97,
+                  107,
+                  101,
+                  95,
+                  114,
+                  101,
+                  99,
+                  111,
+                  114,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "owner"
+              },
+              {
+                "kind": "account",
+                "path": "nft_asset_id"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "new_tier",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "upgrade_brain",
+      "docs": [
+        "Pattern 1: Admin-signed brain step upgrade."
+      ],
+      "discriminator": [
+        159,
+        220,
+        67,
+        15,
+        51,
+        234,
+        24,
+        124
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "program_config",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  103,
+                  114,
+                  97,
+                  109,
+                  95,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "owner"
+        },
+        {
+          "name": "nft_asset_id"
+        },
+        {
+          "name": "stake_record",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  115,
+                  116,
+                  97,
+                  107,
+                  101,
+                  95,
+                  114,
+                  101,
+                  99,
+                  111,
+                  114,
+                  100
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "owner"
+              },
+              {
+                "kind": "account",
+                "path": "nft_asset_id"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "UpgradeBrainParams"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "ProgramConfig",
+      "discriminator": [
+        196,
+        210,
+        90,
+        231,
+        144,
+        149,
+        140,
+        63
+      ]
+    },
+    {
+      "name": "StakeAuthority",
+      "discriminator": [
+        83,
+        230,
+        204,
+        159,
+        60,
+        140,
+        165,
+        138
+      ]
+    },
+    {
+      "name": "StakeRecord",
+      "discriminator": [
+        174,
+        163,
+        11,
+        208,
+        150,
+        236,
+        11,
+        205
+      ]
+    }
+  ],
+  "events": [
+    {
+      "name": "AdminUnstaked",
+      "discriminator": [
+        26,
+        163,
+        71,
+        162,
+        67,
+        42,
+        128,
+        94
+      ]
+    },
+    {
+      "name": "BrainUpgraded",
+      "discriminator": [
+        81,
+        166,
+        39,
+        74,
+        184,
+        249,
+        195,
+        100
+      ]
+    },
+    {
+      "name": "Staked",
+      "discriminator": [
+        11,
+        146,
+        45,
+        205,
+        230,
+        58,
+        213,
+        240
+      ]
+    },
+    {
+      "name": "Unstaked",
+      "discriminator": [
+        27,
+        179,
+        156,
+        215,
+        47,
+        71,
+        195,
+        7
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "InvalidTier",
+      "msg": "Tier must be between 0 and 3"
+    },
+    {
+      "code": 6001,
+      "name": "InvalidBrainSteps",
+      "msg": "Brain steps are not within the current tier's allowed range"
+    },
+    {
+      "code": 6002,
+      "name": "StepsNotMonotonic",
+      "msg": "Brain steps must increase, not decrease"
+    },
+    {
+      "code": 6003,
+      "name": "NotStaker",
+      "msg": "Caller is not the original staker"
+    },
+    {
+      "code": 6004,
+      "name": "NotAdmin",
+      "msg": "Caller is not the admin"
+    },
+    {
+      "code": 6005,
+      "name": "ConfigNotInitialized",
+      "msg": "ProgramConfig has not been initialized"
+    },
+    {
+      "code": 6006,
+      "name": "InvalidAssetId",
+      "msg": "Invalid asset ID"
+    }
+  ],
+  "types": [
+    {
+      "name": "AdminUnstakeParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "root",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "data_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "creator_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "nonce",
+            "type": "u64"
+          },
+          {
+            "name": "index",
+            "type": "u32"
+          }
+        ]
+      }
+    },
+    {
+      "name": "AdminUnstaked",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "nft_asset_id",
+            "type": "pubkey"
+          },
+          {
+            "name": "final_brain_steps",
+            "type": "u32"
+          },
+          {
+            "name": "unstaked_at",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "BrainUpgraded",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "user",
+            "type": "pubkey"
+          },
+          {
+            "name": "nft_asset_id",
+            "type": "pubkey"
+          },
+          {
+            "name": "old_brain_steps",
+            "type": "u32"
+          },
+          {
+            "name": "new_brain_steps",
+            "type": "u32"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          },
+          {
+            "name": "upgrade_method",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ProgramConfig",
+      "docs": [
+        "Program-wide config PDA.",
+        "Stores admin pubkey (Pattern 1) and upgrade_authority (Pattern 2 future use).",
+        "Using a config PDA instead of hardcoded constants makes admin rotation possible."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "admin",
+            "type": "pubkey"
+          },
+          {
+            "name": "upgrade_authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "StakeAuthority",
+      "docs": [
+        "Authority PDA. Acts as the leaf_delegate for staked cNFTs (freeze authority).",
+        "Only the program can sign as this PDA, so only the program can thaw a staked cNFT."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "StakeParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "tier",
+            "type": "u8"
+          },
+          {
+            "name": "root",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "data_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "creator_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "nonce",
+            "type": "u64"
+          },
+          {
+            "name": "index",
+            "type": "u32"
+          }
+        ]
+      }
+    },
+    {
+      "name": "StakeRecord",
+      "docs": [
+        "Per-stake record PDA. One per (owner, nft_asset_id) pair while the cNFT is staked.",
+        "Closed and rent-refunded when user unstakes."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "nft_asset_id",
+            "type": "pubkey"
+          },
+          {
+            "name": "tier",
+            "type": "u8"
+          },
+          {
+            "name": "brain_steps",
+            "type": "u32"
+          },
+          {
+            "name": "staked_at",
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Staked",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "nft_asset_id",
+            "type": "pubkey"
+          },
+          {
+            "name": "tier",
+            "type": "u8"
+          },
+          {
+            "name": "initial_brain_steps",
+            "type": "u32"
+          },
+          {
+            "name": "staked_at",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UnstakeParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "root",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "data_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "creator_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "asset_data_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "flags",
+            "type": "u8"
+          },
+          {
+            "name": "nonce",
+            "type": "u64"
+          },
+          {
+            "name": "index",
+            "type": "u32"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Unstaked",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "nft_asset_id",
+            "type": "pubkey"
+          },
+          {
+            "name": "final_brain_steps",
+            "type": "u32"
+          },
+          {
+            "name": "unstaked_at",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "UpgradeBrainParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "new_brain_steps",
+            "type": "u32"
+          },
+          {
+            "name": "timestamp",
+            "type": "i64"
+          },
+          {
+            "name": "nonce",
+            "type": {
+              "array": [
+                "u8",
+                16
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "constants": [
+    {
+      "name": "PROGRAM_CONFIG_SEED",
+      "type": "bytes",
+      "value": "[112, 114, 111, 103, 114, 97, 109, 95, 99, 111, 110, 102, 105, 103]"
+    },
+    {
+      "name": "STAKE_AUTHORITY_SEED",
+      "type": "bytes",
+      "value": "[115, 116, 97, 107, 101, 95, 97, 117, 116, 104, 111, 114, 105, 116, 121]"
+    },
+    {
+      "name": "STAKE_RECORD_SEED",
+      "type": "bytes",
+      "value": "[115, 116, 97, 107, 101, 95, 114, 101, 99, 111, 114, 100]"
+    }
+  ]
+}

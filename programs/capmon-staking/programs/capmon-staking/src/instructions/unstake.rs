@@ -1,24 +1,18 @@
 use anchor_lang::prelude::*;
-use mpl_bubblegum::instructions::ThawAndRevokeV2CpiBuilder;
+use anchor_lang::solana_program::{instruction::AccountMeta, program::invoke_signed};
+use mpl_bubblegum::instructions::{ThawV2, ThawV2InstructionArgs};
 
 use crate::constants::*;
 use crate::state::*;
 use crate::error::StakingError;
 
-/// Unstakes a Capmon cNFT by:
-/// 1. Thawing the cNFT (now transferable again)
-/// 2. Revoking the stake_authority PDA's leaf_delegate role
-/// 3. Closing the StakeRecord PDA (rent refunded to owner)
 #[derive(Accounts)]
 #[instruction(params: UnstakeParams)]
 pub struct Unstake<'info> {
     #[account(mut)]
     pub owner: Signer<'info>,
 
-    #[account(
-        seeds = [STAKE_AUTHORITY_SEED],
-        bump = stake_authority.bump
-    )]
+    #[account(seeds = [STAKE_AUTHORITY_SEED], bump = stake_authority.bump)]
     pub stake_authority: Account<'info, StakeAuthority>,
 
     #[account(
@@ -62,6 +56,8 @@ pub struct UnstakeParams {
     pub root: [u8; 32],
     pub data_hash: [u8; 32],
     pub creator_hash: [u8; 32],
+    pub asset_data_hash: [u8; 32],
+    pub flags: u8,
     pub nonce: u64,
     pub index: u32,
 }
@@ -85,31 +81,66 @@ pub fn handler<'info>(
     let auth_bump = ctx.accounts.stake_authority.bump;
     let signer_seeds: &[&[&[u8]]] = &[&[STAKE_AUTHORITY_SEED, &[auth_bump]]];
 
-    // Bind all to_account_info() calls to let variables for lifetime
-    let owner_info = ctx.accounts.owner.to_account_info();
-    let stake_auth_info = ctx.accounts.stake_authority.to_account_info();
-    let system_program_info = ctx.accounts.system_program.to_account_info();
+    // Manual CPI for ThawV2. Anchor + Bubblegum CpiBuilder doesn't propagate
+    // PDA signer flags (issue #1129), and the CpiBuilder hides asset_data_hash
+    // and flags args that are required for V2 leaf hash reconstruction.
+    let thaw_struct = ThawV2 {
+        tree_config: ctx.accounts.tree_config.key(),
+        authority: Some(ctx.accounts.stake_authority.key()),
+        payer: ctx.accounts.owner.key(),
+        leaf_delegate: ctx.accounts.stake_authority.key(),
+        leaf_owner: ctx.accounts.owner.key(),
+        merkle_tree: ctx.accounts.merkle_tree.key(),
+        core_collection: None,
+        log_wrapper: ctx.accounts.log_wrapper.key(),
+        compression_program: ctx.accounts.compression_program.key(),
+        system_program: ctx.accounts.system_program.key(),
+    };
 
-    let mut cpi = ThawAndRevokeV2CpiBuilder::new(&ctx.accounts.bubblegum_program);
-    cpi.tree_config(&ctx.accounts.tree_config)
-        .payer(&owner_info)
-        .leaf_delegate(Some(&stake_auth_info))
-        .leaf_owner(&owner_info)
-        .merkle_tree(&ctx.accounts.merkle_tree)
-        .log_wrapper(&ctx.accounts.log_wrapper)
-        .compression_program(&ctx.accounts.compression_program)
-        .system_program(&system_program_info)
-        .root(params.root)
-        .data_hash(params.data_hash)
-        .creator_hash(params.creator_hash)
-        .nonce(params.nonce)
-        .index(params.index);
+    let args = ThawV2InstructionArgs {
+        root: params.root,
+        data_hash: params.data_hash,
+        creator_hash: params.creator_hash,
+        asset_data_hash: Some(params.asset_data_hash),
+        flags: Some(params.flags),
+        nonce: params.nonce,
+        index: params.index,
+    };
 
-    for account in ctx.remaining_accounts.iter() {
-        cpi.add_remaining_account(account, false, false);
+    let mut ix = thaw_struct.instruction(args);
+
+    for ra in ctx.remaining_accounts.iter() {
+        ix.accounts.push(AccountMeta::new_readonly(*ra.key, false));
     }
 
-    cpi.invoke_signed(signer_seeds)?;
+    // Belt-and-suspenders: ensure stake_authority has signer flag set in metas
+    let stake_auth_key = ctx.accounts.stake_authority.key();
+    for meta in ix.accounts.iter_mut() {
+        if meta.pubkey == stake_auth_key {
+            meta.is_signer = true;
+        }
+    }
+
+    // Account infos in the order of ThawV2 struct fields (Option=None gets
+    // bubblegum_program as placeholder, matching Codama generated convention).
+    let mut account_infos: Vec<AccountInfo<'info>> = vec![
+        ctx.accounts.tree_config.to_account_info(),       // tree_config
+        ctx.accounts.stake_authority.to_account_info(),   // authority
+        ctx.accounts.owner.to_account_info(),             // payer
+        ctx.accounts.stake_authority.to_account_info(),   // leaf_delegate
+        ctx.accounts.owner.to_account_info(),             // leaf_owner
+        ctx.accounts.merkle_tree.to_account_info(),       // merkle_tree
+        ctx.accounts.bubblegum_program.to_account_info(), // core_collection placeholder
+        ctx.accounts.log_wrapper.to_account_info(),       // log_wrapper
+        ctx.accounts.compression_program.to_account_info(), // compression_program
+        ctx.accounts.system_program.to_account_info(),    // system_program
+    ];
+
+    for ra in ctx.remaining_accounts.iter() {
+        account_infos.push(ra.clone());
+    }
+
+    invoke_signed(&ix, &account_infos, signer_seeds)?;
 
     emit!(Unstaked {
         owner: owner_key,
@@ -118,12 +149,7 @@ pub fn handler<'info>(
         unstaked_at: Clock::get()?.unix_timestamp,
     });
 
-    msg!(
-        "Unstaked cNFT {} for owner {} (final brain_steps: {})",
-        nft_asset_id,
-        owner_key,
-        final_brain_steps
-    );
+    msg!("Unstaked cNFT {} for owner {}", nft_asset_id, owner_key);
 
     Ok(())
 }
