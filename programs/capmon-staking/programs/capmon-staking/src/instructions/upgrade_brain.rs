@@ -99,7 +99,7 @@ fn tier_range(tier: u8) -> (u32, u32) {
         0 => (EVERGREEN_BRAIN_FLOOR, EVERGREEN_BRAIN_CEILING),
         1 => (AQUASHRINE_BRAIN_FLOOR, AQUASHRINE_BRAIN_CEILING),
         2 => (MAGMAMINE_BRAIN_FLOOR, MAGMAMINE_BRAIN_CEILING),
-        3 => (KING_BRAIN_FIXED, KING_BRAIN_FIXED), // King is fixed
+        3 => (KING_BRAIN_FLOOR, KING_BRAIN_CEILING),
         _ => (0, 0),
     }
 }

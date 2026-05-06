@@ -28,10 +28,10 @@ pub const AQUASHRINE_BRAIN_FLOOR: u32 = 15_000_000;
 pub const AQUASHRINE_BRAIN_CEILING: u32 = 39_000_000;
 
 pub const MAGMAMINE_BRAIN_FLOOR: u32 = 40_000_000;
-pub const MAGMAMINE_BRAIN_CEILING: u32 = 59_000_000;
+pub const MAGMAMINE_BRAIN_CEILING: u32 = 54_000_000;
 
-pub const KING_BRAIN_FIXED: u32 = 60_000_000;
-
+pub const KING_BRAIN_FLOOR: u32 = 55_000_000;
+pub const KING_BRAIN_CEILING: u32 = 60_000_000;
 // ===== External program IDs =====
 // SPL Account Compression program (handles Merkle tree state for cNFTs)
 pub const SPL_ACCOUNT_COMPRESSION_ID: Pubkey =

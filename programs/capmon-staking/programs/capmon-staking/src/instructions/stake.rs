@@ -153,7 +153,7 @@ fn tier_initial_brain_steps(tier: u8) -> u32 {
         0 => EVERGREEN_BRAIN_FLOOR,
         1 => AQUASHRINE_BRAIN_FLOOR,
         2 => MAGMAMINE_BRAIN_FLOOR,
-        3 => KING_BRAIN_FIXED,
+        3 => KING_BRAIN_FLOOR,
         _ => 0,
     }
 }
