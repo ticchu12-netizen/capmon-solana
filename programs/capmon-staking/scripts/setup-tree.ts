@@ -3,8 +3,8 @@
  *
  * Run once. Saves the tree address + secret key to tree-state.json.
  *
- * Tree size: maxDepth=5 (32 leaves), maxBufferSize=8.
- * Cost: ~0.005 SOL.
+ * Tree size: maxDepth=14 (16,384 leaves), maxBufferSize=64.
+ * Cost: ~0.22 SOL.
  *
  * Usage:
  *   npx ts-node scripts/setup-tree.ts
@@ -56,14 +56,14 @@ async function main() {
   console.log("New tree address:", merkleTree.publicKey);
 
   // Create the V2 tree
-  // maxDepth=5 means 2^5 = 32 leaves max (plenty for testing)
-  // maxBufferSize=8 supports concurrent writes within a slot
+  // maxDepth=14 means 2^14 = 16,384 leaves max (production-sized for Blink demo)
+  // maxBufferSize=64 supports many concurrent mints
   console.log("Creating V2 Merkle tree...");
 
   const builder = await createTreeV2(umi, {
     merkleTree,
-    maxDepth: 5,
-    maxBufferSize: 8,
+    maxDepth: 14,
+    maxBufferSize: 64,
     public: false, // only tree creator/delegate can mint
   });
 

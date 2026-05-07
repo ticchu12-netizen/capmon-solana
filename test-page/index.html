@@ -77,6 +77,21 @@
         .status .muted { color: var(--muted); }
         .status .divider { border-top: 1px solid var(--border); margin: 8px 0; padding: 0; height: 0; }
         .status .header { color: var(--solana-purple); font-weight: 600; margin-top: 4px; }
+        .battle-sim {
+            background: linear-gradient(135deg, rgba(153, 69, 255, 0.1), rgba(20, 241, 149, 0.05));
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        .battle-row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; flex-wrap: wrap; }
+        .battle-row:last-child { margin-bottom: 0; }
+        .battle-label { color: var(--muted); font-size: 13px; min-width: 130px; }
+        .battle-value { color: var(--text); font-weight: 600; font-family: 'SF Mono', monospace; }
+        .battle-stats { color: var(--muted); font-size: 13px; }
+        .battle-stats span { color: var(--text); font-weight: 600; }
+        .net-positive { color: var(--solana-green) !important; }
+        .net-negative { color: var(--err) !important; }
     </style>
 </head>
 <body>
@@ -104,6 +119,25 @@
             <button id="unstakeBtn" class="danger" disabled>Unstake first staked cNFT</button>
         </div>
 
+        <div class="battle-sim">
+            <div class="battle-row">
+                <span class="battle-label">Cap Coins:</span>
+                <span class="battle-value" id="capCoins">10,000</span>
+            </div>
+            <div class="battle-row">
+                <span class="battle-label">Active Capmon:</span>
+                <span class="battle-value" id="activeCapmon">None — stake to activate</span>
+            </div>
+            <div class="battle-row">
+                <span class="battle-label">Tier multiplier:</span>
+                <span class="battle-value" id="activeMultiplier">1.0× (no NFT staked)</span>
+            </div>
+            <div class="battle-row">
+                <button id="battleBtn">Battle! (bet 1,000)</button>
+                <span class="battle-stats">Wins: <span id="winCount">0</span> · Losses: <span id="lossCount">0</span> · Net: <span id="netEarned">+0</span></span>
+            </div>
+        </div>
+
         <div class="status" id="status">Ready. Click "Connect Phantom" to begin.</div>
     </div>
 
@@ -117,10 +151,15 @@
         const PROGRAM_ID = new PublicKey('FSenbAEVTgTdfM2723xkk8A2Y5oD8wtmB2EhiWXzpqSg');
         const PROGRAM_CONFIG_PDA = new PublicKey('2cJ12fXKyuFxJZ3PpQ4m6kBkgoUFtRoSQccKMZ9MrRZj');
         const STAKE_AUTHORITY_PDA = new PublicKey('8phyp78BGVaKP5PCombtiQhUFe6XK5b1AK7QUcruSNfp');
-        const MERKLE_TREE = 'HfJRvkEBukPK5tvDPAvCsa2ufnrXy3S1xwsuspfWTgQa';
+        const MERKLE_TREE = '9FL7j28TEYHAPqXZyP82Yc1xriKh9aBKQc9U9dcSrWhU';
         const BUBBLEGUM_PROGRAM_ID = new PublicKey('BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY');
         const COMPRESSION_PROGRAM_ID = new PublicKey('mcmt6YrQEMKw8Mw43FmpRLmf7BqRnFMKmAcbxE3xkAW');
         const NOOP_PROGRAM_ID = new PublicKey('mnoopTCrg4p8ry25e4bcWA9XZjbNjMTfgYVGGEdRsf3');
+
+        const TIER_NAMES = ['Evergreen', 'Aquashrine', 'Magmamine', 'King'];
+        const TIER_MULTIPLIERS = [1.0, 1.4, 1.9, 2.8];
+        const BATTLE_BET = 1000;
+        const WIN_RATE = 0.6;
         const MINT_FUNCTION_URL = 'https://us-central1-capmon-hackathon.cloudfunctions.net/mintCapmonCnft';
 
         const connection = new Connection(RPC_ENDPOINT, 'confirmed');
@@ -133,10 +172,21 @@
         const unstakeBtn = document.getElementById('unstakeBtn');
         const tierSelect = document.getElementById('tierSelect');
         const resetBtn = document.getElementById('resetBtn');
+        const battleBtn = document.getElementById('battleBtn');
+        const capCoinsEl = document.getElementById('capCoins');
+        const activeCapmonEl = document.getElementById('activeCapmon');
+        const activeMultiplierEl = document.getElementById('activeMultiplier');
+        const winCountEl = document.getElementById('winCount');
+        const lossCountEl = document.getElementById('lossCount');
+        const netEarnedEl = document.getElementById('netEarned');
 
         let walletPubkey = null;
         let program = null;
         let userAssets = [];
+        let capCoins = 10000;
+        let wins = 0;
+        let losses = 0;
+        let activeStake = null;
 
         function log(msg, cls) {
             const div = document.createElement('div');
@@ -267,6 +317,8 @@
                 fetchCnftsBtn.disabled = false;
                 connectBtn.textContent = 'Connected';
                 connectBtn.disabled = true;
+                // Auto-fetch to populate userAssets + battle sim
+                fetchCnftsBtn.click();
             } catch (err) {
                 log('Connect failed: ' + err.message, 'err');
                 console.error(err);
@@ -331,6 +383,7 @@
                 });
                 stakeBtn.disabled = stakeableCount === 0;
                 unstakeBtn.disabled = stakedCount === 0;
+                await refreshBattleSim();
             } catch (err) {
                 log('Fetch failed: ' + err.message, 'err');
                 console.error(err);
@@ -383,6 +436,9 @@
                 const record = await program.account.stakeRecord.fetch(stakeRecord);
                 log('   tier: ' + record.tier + ' · brain_steps: ' + record.brainSteps, 'muted');
                 log('Stake verified', 'ok');
+                // Set activeStake immediately from on-chain truth (don't wait for DAS reindex)
+                activeStake = { assetId: asset.id, tier: record.tier, brainSteps: record.brainSteps };
+                updateBattleUI();
             } catch (err) {
                 log('Stake failed: ' + err.message, 'err');
                 if (err.logs) err.logs.forEach(l => log('   ' + l, 'muted'));
@@ -416,11 +472,13 @@
                 }));
 
                 const assetDataHashBytes = Array.from(new PublicKey(fullAsset.compression.asset_data_hash).toBytes());
+                const collectionHashBytes = Array.from(new PublicKey(fullAsset.compression.collection_hash).toBytes());
                 const flags = fullAsset.compression.flags;
                 log('   asset_data_hash: ' + fullAsset.compression.asset_data_hash.slice(0, 16) + '... · flags: ' + flags, 'muted');
 
                 const params = {
                     root: rootBytes, dataHash: dataHashBytes, creatorHash: creatorHashBytes,
+                    collectionHash: collectionHashBytes,
                     assetDataHash: assetDataHashBytes, flags: flags,
                     nonce: new BN(leafId), index: leafId,
                 };
@@ -436,6 +494,11 @@
                 log('Unstaked!', 'ok');
                 log('   Explorer: https://explorer.solana.com/tx/' + sig + '?cluster=devnet', 'muted');
                 log('   StakeRecord PDA closed, rent refunded', 'muted');
+                // Clear activeStake immediately if this was the active one
+                if (activeStake && activeStake.assetId === asset.id) {
+                    activeStake = null;
+                    updateBattleUI();
+                }
                 log('Refreshing cNFT list...', 'muted');
                 fetchCnftsBtn.click();
             } catch (err) {
@@ -477,10 +540,79 @@
             }
         });
 
+        function updateBattleUI() {
+            capCoinsEl.textContent = capCoins.toLocaleString();
+            if (activeStake) {
+                const brainM = (Number(activeStake.brainSteps) / 1_000_000).toFixed(0);
+                activeCapmonEl.textContent = TIER_NAMES[activeStake.tier] + ' · ' + activeStake.assetId.slice(0, 8) + '... · ' + brainM + 'M brain';
+                activeMultiplierEl.textContent = TIER_MULTIPLIERS[activeStake.tier].toFixed(1) + '×';
+            } else {
+                activeCapmonEl.textContent = 'None — stake to activate tier multiplier';
+                activeMultiplierEl.textContent = '1.0× (no NFT staked)';
+            }
+            winCountEl.textContent = wins;
+            lossCountEl.textContent = losses;
+            const net = capCoins - 10000;
+            netEarnedEl.textContent = (net >= 0 ? '+' : '') + net.toLocaleString();
+            netEarnedEl.className = net > 0 ? 'net-positive' : (net < 0 ? 'net-negative' : '');
+            battleBtn.disabled = capCoins < BATTLE_BET;
+        }
+
+        async function findActiveStake() {
+            if (!program || !walletPubkey) return null;
+            for (const asset of userAssets) {
+                if (asset.ownership.frozen !== true) continue;
+                try {
+                    const [stakeRecordPda] = PublicKey.findProgramAddressSync(
+                        [
+                            new TextEncoder().encode('stake_record'),
+                            walletPubkey.toBytes(),
+                            new PublicKey(asset.id).toBytes(),
+                        ],
+                        program.programId
+                    );
+                    const record = await program.account.stakeRecord.fetch(stakeRecordPda);
+                    return { assetId: asset.id, tier: record.tier, brainSteps: record.brainSteps };
+                } catch (e) {}
+            }
+            return null;
+        }
+
+        async function refreshBattleSim() {
+            activeStake = await findActiveStake();
+            updateBattleUI();
+        }
+
+        battleBtn.addEventListener('click', () => {
+            if (capCoins < BATTLE_BET) return;
+            const multiplier = activeStake ? TIER_MULTIPLIERS[activeStake.tier] : 1.0;
+            const win = Math.random() < WIN_RATE;
+            capCoins -= BATTLE_BET;
+            divider();
+            if (win) {
+                const winnings = Math.floor(BATTLE_BET * multiplier);
+                capCoins += BATTLE_BET + winnings;
+                wins++;
+                const tierBadge = activeStake ? ' (' + multiplier.toFixed(1) + '× ' + TIER_NAMES[activeStake.tier] + ' multiplier)' : '';
+                log('Battle WIN! +' + winnings.toLocaleString() + ' Cap Coins' + tierBadge, 'ok');
+            } else {
+                losses++;
+                log('Battle LOSS. -' + BATTLE_BET.toLocaleString() + ' Cap Coins', 'err');
+            }
+            updateBattleUI();
+        });
+
+        updateBattleUI();
+
         resetBtn.addEventListener('click', () => {
             walletPubkey = null;
             program = null;
             userAssets = [];
+            capCoins = 10000;
+            wins = 0;
+            losses = 0;
+            activeStake = null;
+            updateBattleUI();
             connectBtn.textContent = 'Connect Phantom';
             connectBtn.disabled = false;
             testProgramBtn.disabled = true;

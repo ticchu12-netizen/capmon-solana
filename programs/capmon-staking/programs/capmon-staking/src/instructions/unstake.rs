@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::{instruction::AccountMeta, program::invoke_signed};
-use mpl_bubblegum::instructions::{ThawV2, ThawV2InstructionArgs};
+use mpl_bubblegum::instructions::{ThawAndRevokeV2, ThawAndRevokeV2InstructionArgs};
 
 use crate::constants::*;
 use crate::state::*;
@@ -56,6 +56,7 @@ pub struct UnstakeParams {
     pub root: [u8; 32],
     pub data_hash: [u8; 32],
     pub creator_hash: [u8; 32],
+    pub collection_hash: [u8; 32],
     pub asset_data_hash: [u8; 32],
     pub flags: u8,
     pub nonce: u64,
@@ -84,23 +85,22 @@ pub fn handler<'info>(
     // Manual CPI for ThawV2. Anchor + Bubblegum CpiBuilder doesn't propagate
     // PDA signer flags (issue #1129), and the CpiBuilder hides asset_data_hash
     // and flags args that are required for V2 leaf hash reconstruction.
-    let thaw_struct = ThawV2 {
+    let thaw_struct = ThawAndRevokeV2 {
         tree_config: ctx.accounts.tree_config.key(),
-        authority: Some(ctx.accounts.stake_authority.key()),
         payer: ctx.accounts.owner.key(),
-        leaf_delegate: ctx.accounts.stake_authority.key(),
+        leaf_delegate: Some(ctx.accounts.stake_authority.key()),
         leaf_owner: ctx.accounts.owner.key(),
         merkle_tree: ctx.accounts.merkle_tree.key(),
-        core_collection: None,
         log_wrapper: ctx.accounts.log_wrapper.key(),
         compression_program: ctx.accounts.compression_program.key(),
         system_program: ctx.accounts.system_program.key(),
     };
 
-    let args = ThawV2InstructionArgs {
+    let args = ThawAndRevokeV2InstructionArgs {
         root: params.root,
         data_hash: params.data_hash,
         creator_hash: params.creator_hash,
+        collection_hash: Some(params.collection_hash),
         asset_data_hash: Some(params.asset_data_hash),
         flags: Some(params.flags),
         nonce: params.nonce,
@@ -130,7 +130,6 @@ pub fn handler<'info>(
         ctx.accounts.stake_authority.to_account_info(),   // leaf_delegate
         ctx.accounts.owner.to_account_info(),             // leaf_owner
         ctx.accounts.merkle_tree.to_account_info(),       // merkle_tree
-        ctx.accounts.bubblegum_program.to_account_info(), // core_collection placeholder
         ctx.accounts.log_wrapper.to_account_info(),       // log_wrapper
         ctx.accounts.compression_program.to_account_info(), // compression_program
         ctx.accounts.system_program.to_account_info(),    // system_program

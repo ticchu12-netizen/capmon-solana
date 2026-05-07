@@ -1122,6 +1122,15 @@
             }
           },
           {
+            "name": "collection_hash",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
             "name": "asset_data_hash",
             "type": {
               "array": [

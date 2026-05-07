@@ -7,7 +7,7 @@ setGlobalOptions({ region: 'us-central1', maxInstances: 5 });
 const HELIUS_RPC = defineSecret('HELIUS_DEVNET_RPC');
 const CLI_WALLET = defineSecret('CLI_WALLET_KEY');
 
-const MERKLE_TREE = 'HfJRvkEBukPK5tvDPAvCsa2ufnrXy3S1xwsuspfWTgQa';
+const MERKLE_TREE = '9FL7j28TEYHAPqXZyP82Yc1xriKh9aBKQc9U9dcSrWhU';
 
 exports.mintCapmonCnft = onRequest(
     {
