@@ -1,0 +1,8 @@
+{
+  "rules": [
+    {
+      "pathPattern": "/actionMintStake",
+      "apiPath": "/actionMintStake"
+    }
+  ]
+}

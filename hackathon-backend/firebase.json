@@ -5,6 +5,35 @@
     "rules": "firestore.rules",
     "indexes": "firestore.indexes.json"
   },
+  "hosting": {
+    "public": "public",
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "headers": [
+      {
+        "source": "/actions.json",
+        "headers": [
+          { "key": "Access-Control-Allow-Origin", "value": "*" },
+          { "key": "Content-Type", "value": "application/json" }
+        ]
+      }
+    ],
+    "rewrites": [
+      {
+        "source": "/actionMintStake",
+        "function": {
+          "functionId": "actionMintStake",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/mintCapmonCnft",
+        "function": {
+          "functionId": "mintCapmonCnft",
+          "region": "us-central1"
+        }
+      }
+    ]
+  },
   "functions": [
     {
       "source": "functions",
