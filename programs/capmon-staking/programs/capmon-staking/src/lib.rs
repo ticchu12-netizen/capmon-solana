@@ -61,4 +61,20 @@ pub mod capmon_staking {
     ) -> Result<()> {
         instructions::upgrade_brain::handler(ctx, params)
     }
+
+    /// Pattern 2: Ed25519 proof-of-burn brain upgrade. No admin signer needed.
+    pub fn upgrade_brain_v2(
+        ctx: Context<UpgradeBrainV2>,
+        params: UpgradeBrainV2Params,
+    ) -> Result<()> {
+        instructions::upgrade_brain_v2::handler(ctx, params)
+    }
+
+    /// Admin: rotate the upgrade_authority pubkey (Pattern 2 hot key).
+    pub fn set_upgrade_authority(
+        ctx: Context<SetUpgradeAuthority>,
+        new_authority: Pubkey,
+    ) -> Result<()> {
+        instructions::set_upgrade_authority::handler(ctx, new_authority)
+    }
 }

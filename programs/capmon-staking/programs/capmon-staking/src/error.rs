@@ -16,4 +16,14 @@ pub enum StakingError {
     ConfigNotInitialized,
     #[msg("Invalid asset ID")]
     InvalidAssetId,
+    #[msg("Missing Ed25519 sigverify instruction (must be at index 0)")]
+    MissingSigverifyInstruction,
+    #[msg("Wrong sigverify program — expected Ed25519")]
+    WrongSigverifyProgram,
+    #[msg("Ed25519 instruction data is malformed")]
+    Ed25519IxMalformed,
+    #[msg("Signer of Ed25519 ix does not match upgrade_authority")]
+    WrongUpgradeAuthority,
+    #[msg("Signed message does not match expected payload")]
+    MessageMismatch,
 }

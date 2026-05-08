@@ -5,6 +5,8 @@ pub mod unstake;
 pub mod admin_unstake;
 pub mod update_tier;
 pub mod upgrade_brain;
+pub mod upgrade_brain_v2;
+pub mod set_upgrade_authority;
 
 pub use initialize::*;
 pub use initialize_config::*;
@@ -13,3 +15,5 @@ pub use unstake::*;
 pub use admin_unstake::*;
 pub use update_tier::*;
 pub use upgrade_brain::*;
+pub use upgrade_brain_v2::*;
+pub use set_upgrade_authority::*;
