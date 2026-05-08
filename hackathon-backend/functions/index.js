@@ -7,7 +7,7 @@ setGlobalOptions({ region: 'us-central1', maxInstances: 5 });
 const HELIUS_RPC = defineSecret('HELIUS_DEVNET_RPC');
 const CLI_WALLET = defineSecret('CLI_WALLET_KEY');
 
-const MERKLE_TREE = '9FL7j28TEYHAPqXZyP82Yc1xriKh9aBKQc9U9dcSrWhU';
+const MERKLE_TREE = 'E56FVXmnTqfm7TjmeLJtUdBaB32B5wEQEexFVf3ktB7r';
 const PROGRAM_ID = 'FSenbAEVTgTdfM2723xkk8A2Y5oD8wtmB2EhiWXzpqSg';
 const STAKE_DISCRIMINATOR = [206, 176, 202, 18, 200, 209, 179, 108];
 const BUBBLEGUM = 'BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY';
@@ -175,8 +175,8 @@ async function buildAtomicMintStakeBase64({ userPubkey, tier }) {
     });
     leafHashes.push(publicKey(newLeaf));
     const root = getMerkleRoot(leafHashes, 14);
-    const proof = getMerkleProofAtIndex(leafHashes, 14, numMinted);
-
+    const fullProof = getMerkleProofAtIndex(leafHashes, 14, numMinted);
+    const proof = fullProof.slice(0, 4);
     const [newAssetId] = findLeafAssetIdPda(umi, { merkleTree: treePub, leafIndex: numMinted });
     const programIdW = new PublicKey(PROGRAM_ID);
     const userPubW = new PublicKey(userPubkey);

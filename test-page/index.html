@@ -3,146 +3,1864 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Capmon — On-Chain Test</title>
+    <title>Capmon · Stake & Earn — Activate Your On-Chain Capbot</title>
+    <meta name="description" content="Stake your Capmon NFT on Solana. Activate your AI Capbot. Earn Cap Coins 24/7. The only on-chain Train-to-Earn dapp that actually ships.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Trade+Winds&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
+        /* ════════════════════════════════════════════════════════
+           CAPMON · STAKE & EARN — single-file dapp
+           Brand-matched to capmon.fun/builder
+           v2: + chamber tier buttons (with particles)
+                + bigger desktop sub-text
+                + selected-state for chambers
+           ════════════════════════════════════════════════════════ */
+
         :root {
-            --bg: #0a0a0a;
-            --card: #141414;
-            --border: #262626;
-            --text: #ffffff;
-            --muted: #888888;
-            --solana-purple: #9945FF;
-            --solana-green: #14F195;
-            --err: #ff5577;
+            --bg: #070412;
+            --bg-deep: #050308;
+            --bg-card: #0c0820;
+            --bg-elev: #110a26;
+
+            --border: rgba(255,255,255,0.08);
+            --border-strong: rgba(255,255,255,0.18);
+
+            --text: #f5f5fa;
+            --text-dim: rgba(255,255,255,0.62);
+            --text-muted: rgba(255,255,255,0.38);
+
+            --tier-1: #00b36b;
+            --tier-1-bright: #00d68f;
+            --tier-2: #00f0ff;
+            --tier-2-bright: #00f8ff;
+            --tier-3: #e63d00;
+            --tier-3-bright: #ff5500;
+            --tier-4: #ffd700;
+            --tier-4-bright: #ffe600;
+
+            --ok: #00b36b;
             --warn: #ffaa00;
+            --err: #ff5577;
         }
+
         * { box-sizing: border-box; }
+
+        html, body { margin: 0; padding: 0; }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
             background: var(--bg);
             color: var(--text);
+            font-family: 'Lora', Georgia, serif;
+            font-size: 15px;
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
+            background-image:
+                radial-gradient(ellipse 80% 60% at 50% 0%, rgba(0,240,255,0.06) 0%, transparent 70%),
+                radial-gradient(ellipse 60% 40% at 100% 50%, rgba(255,215,0,0.04) 0%, transparent 65%),
+                radial-gradient(ellipse 60% 40% at 0% 80%, rgba(0,179,107,0.04) 0%, transparent 65%);
+            background-attachment: fixed;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: repeating-linear-gradient(
+                0deg, transparent, transparent 2px,
+                rgba(0,0,0,0.18) 2px, rgba(0,0,0,0.18) 3px
+            );
+            pointer-events: none;
+            z-index: 1;
+            opacity: 0.4;
+        }
+
+        body > * { position: relative; z-index: 2; }
+
+        /* ═══════════════ GENRE BANNER ═══════════════ */
+        .genre-banner {
+            background: #000;
+            border-bottom: 1px solid var(--border);
+            padding: 10px 0;
+            overflow: hidden;
+            position: relative;
+        }
+        .genre-banner::before, .genre-banner::after {
+            content: '';
+            position: absolute;
+            top: 0; bottom: 0;
+            width: 80px;
+            z-index: 2;
+            pointer-events: none;
+        }
+        .genre-banner::before { left: 0; background: linear-gradient(to right, #000, transparent); }
+        .genre-banner::after { right: 0; background: linear-gradient(to left, #000, transparent); }
+        .genre-banner-inner {
             display: flex;
+            gap: 32px;
             align-items: center;
             justify-content: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 20px;
+            white-space: nowrap;
+            font-family: 'Trade Winds', sans-serif;
+            font-size: 11px;
+            letter-spacing: 0.18em;
+            color: var(--tier-4);
+            text-shadow: 0 0 8px rgba(255,215,0,0.4);
+            animation: banner-scroll 38s linear infinite;
         }
-        .container { max-width: 720px; width: 100%; }
-        h1 {
-            background: linear-gradient(90deg, var(--solana-purple) 0%, var(--solana-green) 100%);
+        @keyframes banner-scroll {
+            from { transform: translateX(20%); }
+            to { transform: translateX(-20%); }
+        }
+        .genre-banner-sep { color: var(--tier-2); opacity: 0.6; font-size: 14px; }
+
+        /* ═══════════════ HERO ═══════════════ */
+        .hero {
+            text-align: center;
+            padding: 70px 24px 50px;
+            position: relative;
+            border-bottom: 1px solid var(--border);
+            background: radial-gradient(ellipse 70% 80% at 50% 0%, rgba(255,215,0,0.06) 0%, transparent 60%);
+        }
+        .hero-back {
+            position: absolute;
+            top: 28px;
+            left: 28px;
+            font-family: 'Trade Winds', sans-serif;
+            font-size: 11px;
+            letter-spacing: 0.2em;
+            color: var(--text-dim);
+            text-decoration: none;
+            padding: 8px 14px;
+            border: 1px solid var(--border-strong);
+            border-radius: 2px;
+            background: rgba(0,0,0,0.4);
+            transition: all 0.25s ease;
+        }
+        .hero-back:hover {
+            color: var(--tier-2);
+            border-color: var(--tier-2);
+            text-shadow: 0 0 8px var(--tier-2);
+            box-shadow: 0 0 14px rgba(0,240,255,0.3);
+        }
+        .hero-eyebrow {
+            font-family: 'Trade Winds', sans-serif;
+            font-size: 11px;
+            letter-spacing: 0.32em;
+            color: var(--tier-2);
+            text-shadow: 0 0 10px rgba(0,240,255,0.5);
+            margin-bottom: 18px;
+            opacity: 0.9;
+        }
+        .hero-title {
+            font-family: 'Trade Winds', sans-serif;
+            font-size: clamp(58px, 9vw, 110px);
+            line-height: 1;
+            margin: 0 0 14px;
+            background: linear-gradient(90deg, var(--tier-1) 0%, var(--tier-2) 33%, var(--tier-3) 66%, var(--tier-4) 100%);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
-            font-size: 3rem;
-            margin: 0 0 8px 0;
-            text-align: center;
+            letter-spacing: 0.04em;
+            filter: drop-shadow(0 0 24px rgba(255,215,0,0.18));
         }
-        .subtitle { color: var(--muted); margin: 0 0 32px 0; text-align: center; }
-        .actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 16px; align-items: center; }
-        button, select {
-            background: var(--solana-purple);
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: opacity 0.15s;
-            font-family: inherit;
+        .hero-tagline {
+            font-family: 'Lora', serif;
+            font-style: italic;
+            font-size: clamp(15px, 2vw, 19px);
+            color: var(--text-dim);
+            max-width: 680px;
+            margin: 0 auto 8px;
+            line-height: 1.5;
         }
-        button:hover:not(:disabled) { opacity: 0.85; }
-        button:disabled { opacity: 0.4; cursor: not-allowed; }
-        button.secondary, select { background: var(--card); border: 1px solid var(--border); }
-        button.danger { background: #ff5577; }
-        select { padding: 12px 16px; }
-        label { color: var(--muted); font-size: 13px; }
-        .tier-row { display: flex; gap: 12px; justify-content: center; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
-        .status {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 20px;
-            font-family: 'SF Mono', 'Menlo', 'Consolas', monospace;
+        .hero-meta {
+            font-family: 'Trade Winds', sans-serif;
+            font-size: 10px;
+            letter-spacing: 0.25em;
+            color: var(--text-muted);
+            margin-top: 22px;
+        }
+        .hero-meta-dot {
+            display: inline-block;
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: var(--tier-1);
+            box-shadow: 0 0 8px var(--tier-1);
+            margin: 0 8px;
+            vertical-align: middle;
+            animation: live-pulse 1.8s ease-in-out infinite;
+        }
+        @keyframes live-pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.35; }
+        }
+
+        /* ═══════════════ MAIN ═══════════════ */
+        main {
+            max-width: 1320px;
+            margin: 0 auto;
+            padding: 50px 28px 60px;
+        }
+        .section-title {
+            font-family: 'Trade Winds', sans-serif;
             font-size: 13px;
-            line-height: 1.6;
-            white-space: pre-wrap;
-            word-break: break-all;
-            min-height: 200px;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            margin: 0 0 22px;
+            color: var(--text-dim);
+            text-align: center;
+            position: relative;
+            padding: 0 18px;
         }
-        .status .ok { color: var(--solana-green); }
-        .status .err { color: var(--err); }
-        .status .warn { color: var(--warn); }
-        .status .muted { color: var(--muted); }
-        .status .divider { border-top: 1px solid var(--border); margin: 8px 0; padding: 0; height: 0; }
-        .status .header { color: var(--solana-purple); font-weight: 600; margin-top: 4px; }
-        .battle-sim {
-            background: linear-gradient(135deg, rgba(153, 69, 255, 0.1), rgba(20, 241, 149, 0.05));
+
+        /* ═══════════════ WALLET BAR ═══════════════ */
+        .wallet-bar {
+            background: var(--bg-card);
             border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 16px;
+            border-radius: 4px;
+            padding: 18px 22px;
+            margin-bottom: 38px;
+            display: flex;
+            gap: 18px;
+            align-items: center;
+            flex-wrap: wrap;
+            position: relative;
+            overflow: hidden;
+        }
+        .wallet-bar::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: repeating-linear-gradient(
+                0deg, transparent, transparent 2px,
+                rgba(0,0,0,0.1) 2px, rgba(0,0,0,0.1) 4px
+            );
+            pointer-events: none;
+        }
+        .wallet-bar > * { position: relative; z-index: 1; }
+        .wallet-bar-status {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+            min-width: 200px;
+            flex-wrap: wrap;
+        }
+        .wallet-status-dot {
+            width: 9px; height: 9px;
+            border-radius: 50%;
+            background: var(--err);
+            box-shadow: 0 0 10px var(--err);
+            flex-shrink: 0;
+            transition: all 0.3s ease;
+        }
+        .wallet-bar.connected .wallet-status-dot {
+            background: var(--tier-1);
+            box-shadow: 0 0 12px var(--tier-1);
+            animation: live-pulse 2s ease-in-out infinite;
+        }
+        .wallet-status-label {
+            font-family: 'Trade Winds', sans-serif;
+            font-size: 11px;
+            letter-spacing: 0.18em;
+            color: var(--text-dim);
+        }
+        .wallet-pubkey {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            color: var(--tier-2);
+            text-shadow: 0 0 6px rgba(0,240,255,0.3);
+        }
+        .wallet-balance {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            color: var(--text-dim);
+            padding: 4px 10px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--border);
+            border-radius: 2px;
+        }
+        .wallet-balance .amount { color: var(--tier-4); font-weight: 600; }
+
+        /* ═══════════════ CAPBOT STATUS ═══════════════ */
+        .capbot-status {
+            background:
+                linear-gradient(135deg, rgba(255,215,0,0.04), rgba(0,240,255,0.04)),
+                var(--bg-card);
+            border: 1px solid var(--border-strong);
+            border-radius: 4px;
+            padding: 26px 28px;
+            margin-bottom: 38px;
+            position: relative;
+            overflow: hidden;
+        }
+        .capbot-status::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: repeating-linear-gradient(
+                0deg, transparent, transparent 2px,
+                rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 4px
+            );
+            pointer-events: none;
+        }
+        .capbot-status > * { position: relative; z-index: 1; }
+        .capbot-status-eyebrow {
+            font-family: 'Trade Winds', sans-serif;
+            font-size: 10px;
+            letter-spacing: 0.32em;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+        .capbot-status-headline {
+            font-family: 'Trade Winds', sans-serif;
+            font-size: 26px;
+            color: var(--text);
+            letter-spacing: 0.04em;
+            margin-bottom: 6px;
+            line-height: 1.3;
+        }
+        .capbot-status-headline.inactive { color: var(--text-dim); }
+        .capbot-status-headline .accent { color: var(--tier-4); text-shadow: 0 0 14px rgba(255,215,0,0.4); }
+        .capbot-status-detail {
+            font-family: 'Lora', serif;
+            font-style: italic;
+            color: var(--text-dim);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        /* ═══════════════ CHAMBER TIER BUTTONS (NEW) ═══════════════
+           Adapted from capmon.fun/builder marketing source.
+           Scaled down for dapp tier-picker context.
+           IDs renamed to #chamber-tier* and class to .chamber-button
+           to avoid any clash with Elementor selectors.
+           ════════════════════════════════════════════════════════ */
+
+        .chamber-tier-section {
+            padding: 150px 0 150px !important;
+            position: relative;
+        }
+
+        .chamber-tier-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 28px;
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 12px;
+        }
+
+        /* Per-tier widget container — z-index stack so hovered button rises above neighbours */
+        #chamber-tier1, #chamber-tier2, #chamber-tier3, #chamber-tier4 {
+            position: relative !important;
+            overflow: visible !important;
+            transition: z-index 0s 0.18s;
+        }
+        #chamber-tier1 { z-index: 4; }
+        #chamber-tier2 { z-index: 3; }
+        #chamber-tier3 { z-index: 2; }
+        #chamber-tier4 { z-index: 1; }
+
+        #chamber-tier1:has(.chamber-button:hover),
+        #chamber-tier2:has(.chamber-button:hover),
+        #chamber-tier3:has(.chamber-button:hover),
+        #chamber-tier4:has(.chamber-button:hover),
+        #chamber-tier1:has(.chamber-button.selected),
+        #chamber-tier2:has(.chamber-button.selected),
+        #chamber-tier3:has(.chamber-button.selected),
+        #chamber-tier4:has(.chamber-button.selected) {
+            z-index: 50 !important;
+            transition: z-index 0s 0s;
+        }
+
+        /* Main chamber button — box floor */
+        .chamber-button {
+            background: transparent !important;
+            position: relative;
+            overflow: visible;
+            display: block;
+            width: 100%;
+            min-height: 510px !important;
+            padding: 200px 100px !important;
+            border-radius: 16px !important;
+            border: 3px solid rgba(255, 255, 255, 0.18) !important;
+            cursor: pointer;
+            color: var(--text);
+            font-family: 'Trade Winds', sans-serif;
+            will-change: transform;
+
+            box-shadow:
+                0 18px 50px rgba(0, 0, 0, 0.6),
+                inset 0 0 50px rgba(0, 0, 0, 0.45),
+                inset 0 18px 35px rgba(0, 0, 0, 0.4),
+                inset 18px 0 30px rgba(0, 0, 0, 0.28),
+                inset -18px 0 30px rgba(0, 0, 0, 0.28),
+                inset 0 -12px 22px rgba(0, 0, 0, 0.22);
+
+            transition:
+                transform 0.5s cubic-bezier(0.23, 1, 0.32, 1),
+                box-shadow 0.5s cubic-bezier(0.23, 1, 0.32, 1) !important;
+        }
+
+        /* Per-tier border colors + base glow */
+        #chamber-tier1 .chamber-button { border-color: var(--tier-1) !important; box-shadow: 0 0 12px 3px rgba(0,179,107,0.45), 0 0 4px 1px rgba(0,179,107,0.7), 0 18px 50px rgba(0,0,0,0.6), inset 0 0 50px rgba(0,0,0,0.45), inset 0 18px 35px rgba(0,0,0,0.4), inset 18px 0 30px rgba(0,0,0,0.28), inset -18px 0 30px rgba(0,0,0,0.28), inset 0 -12px 22px rgba(0,0,0,0.22) !important; }
+        #chamber-tier2 .chamber-button { border-color: var(--tier-2) !important; box-shadow: 0 0 12px 3px rgba(0,240,255,0.45), 0 0 4px 1px rgba(0,240,255,0.7), 0 18px 50px rgba(0,0,0,0.6), inset 0 0 50px rgba(0,0,0,0.45), inset 0 18px 35px rgba(0,0,0,0.4), inset 18px 0 30px rgba(0,0,0,0.28), inset -18px 0 30px rgba(0,0,0,0.28), inset 0 -12px 22px rgba(0,0,0,0.22) !important; }
+        #chamber-tier3 .chamber-button { border-color: var(--tier-3) !important; box-shadow: 0 0 12px 3px rgba(230,61,0,0.45), 0 0 4px 1px rgba(230,61,0,0.7), 0 18px 50px rgba(0,0,0,0.6), inset 0 0 50px rgba(0,0,0,0.45), inset 0 18px 35px rgba(0,0,0,0.4), inset 18px 0 30px rgba(0,0,0,0.28), inset -18px 0 30px rgba(0,0,0,0.28), inset 0 -12px 22px rgba(0,0,0,0.22) !important; }
+        #chamber-tier4 .chamber-button { border-color: var(--tier-4) !important; box-shadow: 0 0 12px 3px rgba(255,215,0,0.45), 0 0 4px 1px rgba(255,215,0,0.7), 0 18px 50px rgba(0,0,0,0.6), inset 0 0 50px rgba(0,0,0,0.45), inset 0 18px 35px rgba(0,0,0,0.4), inset 18px 0 30px rgba(0,0,0,0.28), inset -18px 0 30px rgba(0,0,0,0.28), inset 0 -12px 22px rgba(0,0,0,0.22) !important; }
+
+        /* Spike burst ring — disabled on mobile (heavy GPU) */
+        #chamber-tier1 .chamber-button::before,
+        #chamber-tier2 .chamber-button::before,
+        #chamber-tier3 .chamber-button::before,
+        #chamber-tier4 .chamber-button::before {
+            content: '';
+            position: absolute;
+            inset: -22px;
+            border-radius: 30px;
+            z-index: 1;
+            opacity: 0;
+            pointer-events: none;
+            background: repeating-conic-gradient(
+                from 0deg,
+                transparent 0deg 0.22deg,
+                currentColor 0.28deg 0.44deg,
+                transparent 0.50deg 2.5deg
+            );
+            filter: blur(0.4px);
+            transform: rotate(0deg);
+            transition: opacity 0.4s ease, filter 0.4s ease, inset 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        #chamber-tier1:hover .chamber-button::before,
+        #chamber-tier1 .chamber-button.selected::before { opacity: 0.95; color: var(--tier-1-bright); filter: blur(0.5px); }
+        #chamber-tier2:hover .chamber-button::before,
+        #chamber-tier2 .chamber-button.selected::before { opacity: 0.95; color: var(--tier-2-bright); filter: blur(0.5px); }
+        #chamber-tier3:hover .chamber-button::before,
+        #chamber-tier3 .chamber-button.selected::before { opacity: 0.95; color: var(--tier-3-bright); filter: blur(0.5px); }
+        #chamber-tier4:hover .chamber-button::before,
+        #chamber-tier4 .chamber-button.selected::before { opacity: 0.98; color: var(--tier-4-bright); filter: blur(0.5px); }
+
+        /* Spike ring press-in compression */
+        #chamber-tier1 .chamber-button:active::before,
+        #chamber-tier2 .chamber-button:active::before,
+        #chamber-tier3 .chamber-button:active::before,
+        #chamber-tier4 .chamber-button:active::before {
+            transition: opacity 0.2s ease-out, filter 0.2s ease-out, inset 0.2s ease-out !important;
+        }
+        #chamber-tier1 .chamber-button:active::before { inset: -4px; opacity: 0.60; color: var(--tier-1-bright); filter: blur(0.8px); }
+        #chamber-tier2 .chamber-button:active::before { inset: -4px; opacity: 0.60; color: var(--tier-2-bright); filter: blur(0.8px); }
+        #chamber-tier3 .chamber-button:active::before { inset: -4px; opacity: 0.60; color: var(--tier-3-bright); filter: blur(0.8px); }
+        #chamber-tier4 .chamber-button:active::before { inset: -4px; opacity: 0.65; color: var(--tier-4-bright); filter: blur(0.8px); }
+
+        /* Image floor */
+        #chamber-tier1 .chamber-button::after,
+        #chamber-tier2 .chamber-button::after,
+        #chamber-tier3 .chamber-button::after,
+        #chamber-tier4 .chamber-button::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-size: cover !important;
+            background-position: center !important;
+            background-repeat: no-repeat !important;
+            z-index: 3;
+            border-radius: 12px;
+            pointer-events: none;
+        }
+        #chamber-tier1 .chamber-button::after { background-image: url('https://capmon.fun/wp-content/uploads/2026/02/image-5.png') !important; }
+        #chamber-tier2 .chamber-button::after { background-image: url('https://capmon.fun/wp-content/uploads/2026/02/image-6.png') !important; }
+        #chamber-tier3 .chamber-button::after { background-image: url('https://capmon.fun/wp-content/uploads/2026/02/okbuilmhgm.jpg') !important; }
+        #chamber-tier4 .chamber-button::after { background-image: url('https://capmon.fun/wp-content/uploads/2026/02/ggggg.jpg') !important; }
+
+        /* Hover & selected: chamber rises */
+        #chamber-tier1:hover .chamber-button,
+        #chamber-tier1 .chamber-button.selected { transform: scale(1.08) !important; box-shadow: 0 0 22px 6px rgba(0,179,107,0.65), 0 0 6px 2px rgba(0,179,107,0.95), 0 38px 90px rgba(0,0,0,0.6), inset 0 0 40px rgba(0,0,0,0.25), inset 0 0 20px rgba(255,255,255,0.1) !important; z-index: 30 !important; }
+        #chamber-tier2:hover .chamber-button,
+        #chamber-tier2 .chamber-button.selected { transform: scale(1.08) !important; box-shadow: 0 0 22px 6px rgba(0,240,255,0.65), 0 0 6px 2px rgba(0,240,255,0.95), 0 38px 90px rgba(0,0,0,0.6), inset 0 0 40px rgba(0,0,0,0.25), inset 0 0 20px rgba(255,255,255,0.1) !important; z-index: 30 !important; }
+        #chamber-tier3:hover .chamber-button,
+        #chamber-tier3 .chamber-button.selected { transform: scale(1.08) !important; box-shadow: 0 0 22px 6px rgba(230,61,0,0.65), 0 0 6px 2px rgba(230,61,0,0.95), 0 38px 90px rgba(0,0,0,0.6), inset 0 0 40px rgba(0,0,0,0.25), inset 0 0 20px rgba(255,255,255,0.1) !important; z-index: 30 !important; }
+        #chamber-tier4:hover .chamber-button,
+        #chamber-tier4 .chamber-button.selected { transform: scale(1.08) !important; box-shadow: 0 0 22px 6px rgba(255,215,0,0.7), 0 0 6px 2px rgba(255,215,0,1), 0 38px 90px rgba(0,0,0,0.6), inset 0 0 40px rgba(0,0,0,0.25), inset 0 0 20px rgba(255,255,255,0.12) !important; z-index: 30 !important; }
+
+        /* Dim non-hovered chambers */
+        .chamber-tier-row:has(.chamber-button:hover) .chamber-button:not(:hover):not(.selected) {
+            filter: brightness(0.42) saturate(0) !important;
+            transition: filter 0.4s ease;
+        }
+
+        /* Press-in animation */
+        #chamber-tier1 .chamber-button:active,
+        #chamber-tier2 .chamber-button:active,
+        #chamber-tier3 .chamber-button:active,
+        #chamber-tier4 .chamber-button:active {
+            transition:
+                transform 0.08s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                box-shadow 0.08s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+        }
+        #chamber-tier1 .chamber-button:active { transform: scale(1.02) translateY(4px) !important; box-shadow: 0 0 6px 2px rgba(0,179,107,0.25), 0 4px 18px rgba(0,0,0,0.85), inset 0 6px 24px rgba(0,0,0,0.85), inset 0 0 60px rgba(0,0,0,0.75), inset 10px 0 40px rgba(0,0,0,0.55), inset -10px 0 40px rgba(0,0,0,0.55), inset 0 -8px 30px rgba(0,0,0,0.45), inset 0 2px 8px rgba(0,179,107,0.15) !important; }
+        #chamber-tier2 .chamber-button:active { transform: scale(1.02) translateY(4px) !important; box-shadow: 0 0 6px 2px rgba(0,240,255,0.25), 0 4px 18px rgba(0,0,0,0.85), inset 0 6px 24px rgba(0,0,0,0.85), inset 0 0 60px rgba(0,0,0,0.75), inset 10px 0 40px rgba(0,0,0,0.55), inset -10px 0 40px rgba(0,0,0,0.55), inset 0 -8px 30px rgba(0,0,0,0.45), inset 0 2px 8px rgba(0,240,255,0.15) !important; }
+        #chamber-tier3 .chamber-button:active { transform: scale(1.02) translateY(4px) !important; box-shadow: 0 0 6px 2px rgba(230,61,0,0.25), 0 4px 18px rgba(0,0,0,0.85), inset 0 6px 24px rgba(0,0,0,0.85), inset 0 0 60px rgba(0,0,0,0.75), inset 10px 0 40px rgba(0,0,0,0.55), inset -10px 0 40px rgba(0,0,0,0.55), inset 0 -8px 30px rgba(0,0,0,0.45), inset 0 2px 8px rgba(230,61,0,0.15) !important; }
+        #chamber-tier4 .chamber-button:active { transform: scale(1.02) translateY(4px) !important; box-shadow: 0 0 6px 2px rgba(255,215,0,0.25), 0 4px 18px rgba(0,0,0,0.85), inset 0 6px 24px rgba(0,0,0,0.85), inset 0 0 60px rgba(0,0,0,0.75), inset 10px 0 40px rgba(0,0,0,0.55), inset -10px 0 40px rgba(0,0,0,0.55), inset 0 -8px 30px rgba(0,0,0,0.45), inset 0 2px 8px rgba(255,215,0,0.15) !important; }
+
+        /* Walls pull inward + depth floods on press */
+        #chamber-tier1:has(.chamber-button:active) .box-wall,
+        #chamber-tier2:has(.chamber-button:active) .box-wall,
+        #chamber-tier3:has(.chamber-button:active) .box-wall,
+        #chamber-tier4:has(.chamber-button:active) .box-wall {
+            opacity: 0.35;
+            transition: opacity 0.08s ease, transform 0.08s ease, filter 0.08s ease;
+        }
+        #chamber-tier1:has(.chamber-button:active) .box-depth,
+        #chamber-tier2:has(.chamber-button:active) .box-depth,
+        #chamber-tier3:has(.chamber-button:active) .box-depth,
+        #chamber-tier4:has(.chamber-button:active) .box-depth {
+            opacity: 1;
+            transition: opacity 0.08s ease;
+        }
+
+        /* Chamber selected badge — top-right floating tag */
+        .chamber-selected-badge {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            z-index: 10;
+            font-family: 'Trade Winds', sans-serif;
+            font-size: 9px;
+            letter-spacing: 0.22em;
+            padding: 5px 10px;
+            background: rgba(0,0,0,0.85);
+            border: 1px solid currentColor;
+            color: currentColor;
+            text-shadow: 0 0 8px currentColor;
+            opacity: 0;
+            transform: translateY(-4px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            pointer-events: none;
+        }
+        #chamber-tier1 .chamber-button.selected ~ .chamber-selected-badge,
+        #chamber-tier1 .chamber-button.selected .chamber-selected-badge,
+        .chamber-button.selected .chamber-selected-badge {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        #chamber-tier1 .chamber-selected-badge { color: var(--tier-1-bright); }
+        #chamber-tier2 .chamber-selected-badge { color: var(--tier-2-bright); }
+        #chamber-tier3 .chamber-selected-badge { color: var(--tier-3-bright); }
+        #chamber-tier4 .chamber-selected-badge { color: var(--tier-4-bright); }
+
+        /* Chamber text overlay (label + sublabel at bottom) */
+        .chamber-content {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            padding: 26px 16px 20px;
+            background: linear-gradient(to top,
+                rgba(0,0,0,0.96) 0%,
+                rgba(0,0,0,0.78) 50%,
+                transparent 100%);
+            z-index: 5;
+            text-align: center;
+            pointer-events: none;
+            border-radius: 0 0 12px 12px;
+        }
+        .chamber-label {
+            display: block;
+            font-family: 'Trade Winds', sans-serif;
+            font-size: 22px;
+            color: currentColor;
+            letter-spacing: 0.04em;
+            margin-bottom: 4px;
+            text-shadow: 0 0 16px currentColor, 0 2px 8px rgba(0,0,0,0.95);
+            line-height: 1.1;
+        }
+        #chamber-tier1 .chamber-label { color: var(--tier-1-bright); }
+        #chamber-tier2 .chamber-label { color: var(--tier-2-bright); }
+        #chamber-tier3 .chamber-label { color: var(--tier-3-bright); }
+        #chamber-tier4 .chamber-label { color: var(--tier-4-bright); }
+
+        .chamber-sublabel {
+            display: block;
+            font-family: 'Lora', serif;
+            font-style: italic;
+            font-size: 13px;
+            color: rgba(255,255,255,0.92);
+            text-shadow: 0 1px 6px rgba(0,0,0,0.95);
+            letter-spacing: 0.02em;
+        }
+
+        /* Box depth overlay */
+        .box-depth {
+            position: absolute;
+            inset: 0;
+            border-radius: 12px;
+            pointer-events: none;
+            z-index: 4;
+            background:
+                radial-gradient(ellipse 55% 38% at 50% 44%, rgba(255,255,255,0.07) 0%, transparent 70%),
+                linear-gradient(to bottom, rgba(0,0,0,0.85) 0%, transparent 48%),
+                linear-gradient(to right,  rgba(0,0,0,0.7) 0%, transparent 42%),
+                linear-gradient(to left,   rgba(0,0,0,0.7) 0%, transparent 42%),
+                linear-gradient(to top,    rgba(0,0,0,0.6) 0%, transparent 38%);
+            transition: opacity 0.5s ease;
+        }
+        #chamber-tier1:hover .box-depth, #chamber-tier1 .chamber-button.selected ~ .box-depth, #chamber-tier1:has(.chamber-button.selected) .box-depth,
+        #chamber-tier2:hover .box-depth, #chamber-tier2:has(.chamber-button.selected) .box-depth,
+        #chamber-tier3:hover .box-depth, #chamber-tier3:has(.chamber-button.selected) .box-depth,
+        #chamber-tier4:hover .box-depth, #chamber-tier4:has(.chamber-button.selected) .box-depth {
+            opacity: 0.2;
+        }
+
+        /* Box shell wrapper (positioned by JS) */
+        .box-shell {
+            position: absolute !important;
+            overflow: visible !important;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Box walls */
+        .box-wall {
+            position: absolute;
+            pointer-events: none;
+            overflow: visible !important;
+            will-change: filter, opacity;
+            transform: translateZ(0);
+            transition: opacity 0.15s ease, filter 0.5s ease,
+                        transform 0.22s cubic-bezier(0.23, 1, 0.32, 1);
+            opacity: 0.72;
+        }
+        .box-wall-top    { transform-origin: bottom center; }
+        .box-wall-bottom { transform-origin: top center; }
+        .box-wall-left   { transform-origin: right center; }
+        .box-wall-right  { transform-origin: left center; }
+
+        .box-wall-top    { left: 0; right: 0; height: 90px; bottom: 100%; clip-path: polygon(8% 0%, 92% 0%, 100% 100%, 0% 100%); transform: translateZ(0) scaleY(0.6); }
+        .box-wall-bottom { left: 0; right: 0; height: 90px; top: 100%;    clip-path: polygon(0% 0%, 100% 0%, 92% 100%, 8% 100%); transform: translateZ(0) scaleY(0.6); }
+        .box-wall-left   { width: 80px; top: 0; bottom: 0; right: 100%;   clip-path: polygon(0% 8%, 100% 0%, 100% 100%, 0% 92%);  transform: translateZ(0) scaleX(0.6); }
+        .box-wall-right  { width: 80px; top: 0; bottom: 0; left: 100%;    clip-path: polygon(0% 0%, 100% 8%, 100% 92%, 0% 100%);  transform: translateZ(0) scaleX(0.6); }
+
+        .box-wall-corner {
+            position: absolute;
+            width: 130px; height: 130px;
+            pointer-events: none;
+            overflow: visible !important;
+            will-change: filter, opacity;
+            transform: translateZ(0) scale(0.7);
+            transition: opacity 0.15s ease, filter 0.5s ease,
+                        transform 0.22s cubic-bezier(0.23, 1, 0.32, 1);
+            opacity: 0.72;
+        }
+        .box-wall-corner-tl { right: 100%; bottom: 100%; clip-path: polygon(100% 100%, 78% 0%, 0% 78%); }
+        .box-wall-corner-tr { left: 100%;  bottom: 100%; clip-path: polygon(0% 100%, 22% 0%, 100% 78%); }
+        .box-wall-corner-bl { right: 100%; top: 100%;    clip-path: polygon(100% 0%, 0% 22%, 78% 100%); }
+        .box-wall-corner-br { left: 100%;  top: 100%;    clip-path: polygon(0% 0%, 22% 100%, 100% 22%); }
+
+        /* Wall hover/selected states — light up + bloom outward */
+        #chamber-tier1:has(.chamber-button:hover) .box-wall,
+        #chamber-tier2:has(.chamber-button:hover) .box-wall,
+        #chamber-tier3:has(.chamber-button:hover) .box-wall,
+        #chamber-tier4:has(.chamber-button:hover) .box-wall,
+        #chamber-tier1:has(.chamber-button.selected) .box-wall,
+        #chamber-tier2:has(.chamber-button.selected) .box-wall,
+        #chamber-tier3:has(.chamber-button.selected) .box-wall,
+        #chamber-tier4:has(.chamber-button.selected) .box-wall {
+            filter: brightness(2.6) saturate(2.0);
+            opacity: 1;
+        }
+
+        #chamber-tier1:has(.chamber-button:hover) .box-wall-top,
+        #chamber-tier2:has(.chamber-button:hover) .box-wall-top,
+        #chamber-tier3:has(.chamber-button:hover) .box-wall-top,
+        #chamber-tier4:has(.chamber-button:hover) .box-wall-top,
+        #chamber-tier1:has(.chamber-button.selected) .box-wall-top,
+        #chamber-tier2:has(.chamber-button.selected) .box-wall-top,
+        #chamber-tier3:has(.chamber-button.selected) .box-wall-top,
+        #chamber-tier4:has(.chamber-button.selected) .box-wall-top { transform: translateZ(0) scaleY(1) translateY(-8px); }
+
+        #chamber-tier1:has(.chamber-button:hover) .box-wall-bottom,
+        #chamber-tier2:has(.chamber-button:hover) .box-wall-bottom,
+        #chamber-tier3:has(.chamber-button:hover) .box-wall-bottom,
+        #chamber-tier4:has(.chamber-button:hover) .box-wall-bottom,
+        #chamber-tier1:has(.chamber-button.selected) .box-wall-bottom,
+        #chamber-tier2:has(.chamber-button.selected) .box-wall-bottom,
+        #chamber-tier3:has(.chamber-button.selected) .box-wall-bottom,
+        #chamber-tier4:has(.chamber-button.selected) .box-wall-bottom { transform: translateZ(0) scaleY(1) translateY(8px); }
+
+        #chamber-tier1:has(.chamber-button:hover) .box-wall-left,
+        #chamber-tier2:has(.chamber-button:hover) .box-wall-left,
+        #chamber-tier3:has(.chamber-button:hover) .box-wall-left,
+        #chamber-tier4:has(.chamber-button:hover) .box-wall-left,
+        #chamber-tier1:has(.chamber-button.selected) .box-wall-left,
+        #chamber-tier2:has(.chamber-button.selected) .box-wall-left,
+        #chamber-tier3:has(.chamber-button.selected) .box-wall-left,
+        #chamber-tier4:has(.chamber-button.selected) .box-wall-left { transform: translateZ(0) scaleX(1) translateX(-8px); }
+
+        #chamber-tier1:has(.chamber-button:hover) .box-wall-right,
+        #chamber-tier2:has(.chamber-button:hover) .box-wall-right,
+        #chamber-tier3:has(.chamber-button:hover) .box-wall-right,
+        #chamber-tier4:has(.chamber-button:hover) .box-wall-right,
+        #chamber-tier1:has(.chamber-button.selected) .box-wall-right,
+        #chamber-tier2:has(.chamber-button.selected) .box-wall-right,
+        #chamber-tier3:has(.chamber-button.selected) .box-wall-right,
+        #chamber-tier4:has(.chamber-button.selected) .box-wall-right { transform: translateZ(0) scaleX(1) translateX(8px); }
+
+        #chamber-tier1:has(.chamber-button:hover) .box-wall-corner-tl,
+        #chamber-tier2:has(.chamber-button:hover) .box-wall-corner-tl,
+        #chamber-tier3:has(.chamber-button:hover) .box-wall-corner-tl,
+        #chamber-tier4:has(.chamber-button:hover) .box-wall-corner-tl,
+        #chamber-tier1:has(.chamber-button.selected) .box-wall-corner-tl,
+        #chamber-tier2:has(.chamber-button.selected) .box-wall-corner-tl,
+        #chamber-tier3:has(.chamber-button.selected) .box-wall-corner-tl,
+        #chamber-tier4:has(.chamber-button.selected) .box-wall-corner-tl { transform: translateZ(0) scale(1) translate(-8px, -8px); }
+
+        #chamber-tier1:has(.chamber-button:hover) .box-wall-corner-tr,
+        #chamber-tier2:has(.chamber-button:hover) .box-wall-corner-tr,
+        #chamber-tier3:has(.chamber-button:hover) .box-wall-corner-tr,
+        #chamber-tier4:has(.chamber-button:hover) .box-wall-corner-tr,
+        #chamber-tier1:has(.chamber-button.selected) .box-wall-corner-tr,
+        #chamber-tier2:has(.chamber-button.selected) .box-wall-corner-tr,
+        #chamber-tier3:has(.chamber-button.selected) .box-wall-corner-tr,
+        #chamber-tier4:has(.chamber-button.selected) .box-wall-corner-tr { transform: translateZ(0) scale(1) translate(8px, -8px); }
+
+        #chamber-tier1:has(.chamber-button:hover) .box-wall-corner-bl,
+        #chamber-tier2:has(.chamber-button:hover) .box-wall-corner-bl,
+        #chamber-tier3:has(.chamber-button:hover) .box-wall-corner-bl,
+        #chamber-tier4:has(.chamber-button:hover) .box-wall-corner-bl,
+        #chamber-tier1:has(.chamber-button.selected) .box-wall-corner-bl,
+        #chamber-tier2:has(.chamber-button.selected) .box-wall-corner-bl,
+        #chamber-tier3:has(.chamber-button.selected) .box-wall-corner-bl,
+        #chamber-tier4:has(.chamber-button.selected) .box-wall-corner-bl { transform: translateZ(0) scale(1) translate(-8px, 8px); }
+
+        #chamber-tier1:has(.chamber-button:hover) .box-wall-corner-br,
+        #chamber-tier2:has(.chamber-button:hover) .box-wall-corner-br,
+        #chamber-tier3:has(.chamber-button:hover) .box-wall-corner-br,
+        #chamber-tier4:has(.chamber-button:hover) .box-wall-corner-br,
+        #chamber-tier1:has(.chamber-button.selected) .box-wall-corner-br,
+        #chamber-tier2:has(.chamber-button.selected) .box-wall-corner-br,
+        #chamber-tier3:has(.chamber-button.selected) .box-wall-corner-br,
+        #chamber-tier4:has(.chamber-button.selected) .box-wall-corner-br { transform: translateZ(0) scale(1) translate(8px, 8px); }
+
+        /* Per-tier wall colors */
+        #chamber-tier1 .box-wall-top    { background: linear-gradient(to bottom, #000d06, #00b36b1a); border-bottom: 2px solid #00b36b60; }
+        #chamber-tier1 .box-wall-bottom { background: linear-gradient(to top,    #000d06, #00b36b1a); border-top:    2px solid #00b36b60; }
+        #chamber-tier1 .box-wall-left   { background: linear-gradient(to right,  #000d06, #00b36b1a); border-right:  2px solid #00b36b60; }
+        #chamber-tier1 .box-wall-right  { background: linear-gradient(to left,   #000d06, #00b36b1a); border-left:   2px solid #00b36b60; }
+
+        #chamber-tier2 .box-wall-top    { background: linear-gradient(to bottom, #000d12, #00f0ff1a); border-bottom: 2px solid #00f0ff60; }
+        #chamber-tier2 .box-wall-bottom { background: linear-gradient(to top,    #000d12, #00f0ff1a); border-top:    2px solid #00f0ff60; }
+        #chamber-tier2 .box-wall-left   { background: linear-gradient(to right,  #000d12, #00f0ff1a); border-right:  2px solid #00f0ff60; }
+        #chamber-tier2 .box-wall-right  { background: linear-gradient(to left,   #000d12, #00f0ff1a); border-left:   2px solid #00f0ff60; }
+
+        #chamber-tier3 .box-wall-top    { background: linear-gradient(to bottom, #140200, #e63d001a); border-bottom: 2px solid #e63d0060; }
+        #chamber-tier3 .box-wall-bottom { background: linear-gradient(to top,    #140200, #e63d001a); border-top:    2px solid #e63d0060; }
+        #chamber-tier3 .box-wall-left   { background: linear-gradient(to right,  #140200, #e63d001a); border-right:  2px solid #e63d0060; }
+        #chamber-tier3 .box-wall-right  { background: linear-gradient(to left,   #140200, #e63d001a); border-left:   2px solid #e63d0060; }
+
+        #chamber-tier4 .box-wall-top    { background: linear-gradient(to bottom, #120f00, #ffd7001a); border-bottom: 2px solid #ffd70060; }
+        #chamber-tier4 .box-wall-bottom { background: linear-gradient(to top,    #120f00, #ffd7001a); border-top:    2px solid #ffd70060; }
+        #chamber-tier4 .box-wall-left   { background: linear-gradient(to right,  #120f00, #ffd7001a); border-right:  2px solid #ffd70060; }
+        #chamber-tier4 .box-wall-right  { background: linear-gradient(to left,   #120f00, #ffd7001a); border-left:   2px solid #ffd70060; }
+
+        /* Per-tier corner conic gradients */
+        #chamber-tier1 .box-wall-corner-tl { background: conic-gradient(from 283deg at 100% 100%, #000d06 0deg, #001c0b 32deg, #00d68fcc 32deg, #00d68fcc 34deg, #011409 34deg, #002e16 66deg, transparent 67deg); }
+        #chamber-tier1 .box-wall-corner-tr { background: conic-gradient(from 12deg at 0% 100%, #011409 0deg, #002e16 32deg, #00d68fcc 32deg, #00d68fcc 34deg, #000d06 34deg, #001c0b 66deg, transparent 67deg); }
+        #chamber-tier1 .box-wall-corner-bl { background: conic-gradient(from 192deg at 100% 0%, #011409 0deg, #002e16 32deg, #00d68fcc 32deg, #00d68fcc 34deg, #000d06 34deg, #001c0b 66deg, transparent 67deg); }
+        #chamber-tier1 .box-wall-corner-br { background: conic-gradient(from 102deg at 0% 0%, #000d06 0deg, #001c0b 32deg, #00d68fcc 32deg, #00d68fcc 34deg, #011409 34deg, #002e16 66deg, transparent 67deg); }
+
+        #chamber-tier2 .box-wall-corner-tl { background: conic-gradient(from 283deg at 100% 100%, #000d12 0deg, #001a22 32deg, #00f8ffcc 32deg, #00f8ffcc 34deg, #001415 34deg, #00343a 66deg, transparent 67deg); }
+        #chamber-tier2 .box-wall-corner-tr { background: conic-gradient(from 12deg at 0% 100%, #001415 0deg, #00343a 32deg, #00f8ffcc 32deg, #00f8ffcc 34deg, #000d12 34deg, #001a22 66deg, transparent 67deg); }
+        #chamber-tier2 .box-wall-corner-bl { background: conic-gradient(from 192deg at 100% 0%, #001415 0deg, #00343a 32deg, #00f8ffcc 32deg, #00f8ffcc 34deg, #000d12 34deg, #001a22 66deg, transparent 67deg); }
+        #chamber-tier2 .box-wall-corner-br { background: conic-gradient(from 102deg at 0% 0%, #000d12 0deg, #001a22 32deg, #00f8ffcc 32deg, #00f8ffcc 34deg, #001415 34deg, #00343a 66deg, transparent 67deg); }
+
+        #chamber-tier3 .box-wall-corner-tl { background: conic-gradient(from 283deg at 100% 100%, #0e0100 0deg, #260500 32deg, #ff5500cc 32deg, #ff5500cc 34deg, #170200 34deg, #3a0800 66deg, transparent 67deg); }
+        #chamber-tier3 .box-wall-corner-tr { background: conic-gradient(from 12deg at 0% 100%, #170200 0deg, #3a0800 32deg, #ff5500cc 32deg, #ff5500cc 34deg, #0e0100 34deg, #260500 66deg, transparent 67deg); }
+        #chamber-tier3 .box-wall-corner-bl { background: conic-gradient(from 192deg at 100% 0%, #170200 0deg, #3a0800 32deg, #ff5500cc 32deg, #ff5500cc 34deg, #0e0100 34deg, #260500 66deg, transparent 67deg); }
+        #chamber-tier3 .box-wall-corner-br { background: conic-gradient(from 102deg at 0% 0%, #0e0100 0deg, #260500 32deg, #ff5500cc 32deg, #ff5500cc 34deg, #170200 34deg, #3a0800 66deg, transparent 67deg); }
+
+        #chamber-tier4 .box-wall-corner-tl { background: conic-gradient(from 283deg at 100% 100%, #0c0900 0deg, #201900 32deg, #ffe600cc 32deg, #ffe600cc 34deg, #141000 34deg, #332800 66deg, transparent 67deg); }
+        #chamber-tier4 .box-wall-corner-tr { background: conic-gradient(from 12deg at 0% 100%, #141000 0deg, #332800 32deg, #ffe600cc 32deg, #ffe600cc 34deg, #0c0900 34deg, #201900 66deg, transparent 67deg); }
+        #chamber-tier4 .box-wall-corner-bl { background: conic-gradient(from 192deg at 100% 0%, #141000 0deg, #332800 32deg, #ffe600cc 32deg, #ffe600cc 34deg, #0c0900 34deg, #201900 66deg, transparent 67deg); }
+        #chamber-tier4 .box-wall-corner-br { background: conic-gradient(from 102deg at 0% 0%, #0c0900 0deg, #201900 32deg, #ffe600cc 32deg, #ffe600cc 34deg, #141000 34deg, #332800 66deg, transparent 67deg); }
+
+        /* Particle canvas overlay (sized in JS) */
+        .particle-canvas {
+            position: absolute;
+            top:  -130px;
+            left: -130px;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        /* ═══════════════ TIER GRID (lite cards, mirror chamber selection) ═══════════════ */
+        .tier-grid-wrap { margin-bottom: 38px; }
+        .tier-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 18px;
+        }
+        .tier-card {
+            position: relative;
+            background: var(--bg-card);
+            border: 2px solid;
+            padding: 24px 20px 22px;
+            cursor: pointer;
+            overflow: hidden;
+            transition: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1),
+                        box-shadow 0.3s ease;
+            color: var(--tier-1);
+            min-height: 290px;
+            display: flex;
+            flex-direction: column;
+        }
+        .tier-card.evergreen { color: var(--tier-1); border-color: var(--tier-1); box-shadow: inset 0 0 32px rgba(0,179,107,0.05); }
+        .tier-card.aquashrine { color: var(--tier-2); border-color: var(--tier-2); box-shadow: inset 0 0 32px rgba(0,240,255,0.05); }
+        .tier-card.magmamine { color: var(--tier-3); border-color: var(--tier-3); box-shadow: inset 0 0 32px rgba(230,61,0,0.05); }
+        .tier-card.king { color: var(--tier-4); border-color: var(--tier-4); box-shadow: inset 0 0 32px rgba(255,215,0,0.06); }
+        .tier-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: currentColor;
+            opacity: 0.85;
+            box-shadow: 0 0 12px currentColor;
+        }
+        .tier-card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: repeating-linear-gradient(
+                0deg, transparent, transparent 2px,
+                rgba(0,0,0,0.12) 2px, rgba(0,0,0,0.12) 4px
+            );
+            pointer-events: none;
+            z-index: 0;
+        }
+        .tier-card > * { position: relative; z-index: 1; }
+        .tier-card:hover { transform: translateY(-4px); }
+        .tier-card.evergreen:hover { box-shadow: 0 14px 38px rgba(0,0,0,0.55), 0 0 26px rgba(0,179,107,0.4), inset 0 0 50px rgba(0,179,107,0.1); }
+        .tier-card.aquashrine:hover { box-shadow: 0 14px 38px rgba(0,0,0,0.55), 0 0 26px rgba(0,240,255,0.4), inset 0 0 50px rgba(0,240,255,0.1); }
+        .tier-card.magmamine:hover { box-shadow: 0 14px 38px rgba(0,0,0,0.55), 0 0 26px rgba(230,61,0,0.4), inset 0 0 50px rgba(230,61,0,0.1); }
+        .tier-card.king:hover { box-shadow: 0 14px 38px rgba(0,0,0,0.55), 0 0 32px rgba(255,215,0,0.55), inset 0 0 60px rgba(255,215,0,0.14); }
+        .tier-card.selected { transform: translateY(-6px); }
+        .tier-card.evergreen.selected { box-shadow: 0 18px 44px rgba(0,0,0,0.6), 0 0 32px rgba(0,179,107,0.6), inset 0 0 60px rgba(0,179,107,0.14); }
+        .tier-card.aquashrine.selected { box-shadow: 0 18px 44px rgba(0,0,0,0.6), 0 0 32px rgba(0,240,255,0.6), inset 0 0 60px rgba(0,240,255,0.14); }
+        .tier-card.magmamine.selected { box-shadow: 0 18px 44px rgba(0,0,0,0.6), 0 0 32px rgba(230,61,0,0.6), inset 0 0 60px rgba(230,61,0,0.14); }
+        .tier-card.king.selected { box-shadow: 0 18px 44px rgba(0,0,0,0.6), 0 0 38px rgba(255,215,0,0.7), inset 0 0 70px rgba(255,215,0,0.18); }
+        .tier-corner {
+            position: absolute;
+            width: 12px; height: 12px;
+            border-color: currentColor;
+            border-style: solid;
+            opacity: 0.55;
+            z-index: 2;
+        }
+        .tier-corner.tl { top: 6px; left: 6px; border-width: 1px 0 0 1px; }
+        .tier-corner.tr { top: 6px; right: 6px; border-width: 1px 1px 0 0; }
+        .tier-corner.bl { bottom: 6px; left: 6px; border-width: 0 0 1px 1px; }
+        .tier-corner.br { bottom: 6px; right: 6px; border-width: 0 1px 1px 0; }
+        .tier-badge {
+            display: inline-block;
+            font-family: 'Trade Winds', sans-serif;
+            font-size: 9px;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            padding: 4px 9px;
+            border: 1px solid currentColor;
+            background: rgba(0,0,0,0.5);
+            margin-bottom: 14px;
+            align-self: flex-start;
+        }
+        .tier-card-name {
+            font-family: 'Trade Winds', sans-serif;
+            font-size: 24px;
+            letter-spacing: 0.04em;
+            color: currentColor;
+            text-shadow: 0 0 12px currentColor;
+            margin: 0 0 4px;
+        }
+        .tier-card-sub {
+            font-family: 'Lora', serif;
+            font-style: italic;
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+            min-height: 32px;
+            line-height: 1.4;
+        }
+        .tier-stats {
+            border-top: 1px solid rgba(255,255,255,0.06);
+            padding-top: 14px;
+            margin-top: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .tier-stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            font-size: 12px;
+        }
+        .tier-stat-label {
+            font-family: 'Lora', serif;
+            color: var(--text-muted);
+        }
+        .tier-stat-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            color: currentColor;
+            font-weight: 600;
+        }
+        .tier-stat-value.big {
+            font-family: 'Trade Winds', sans-serif;
+            font-size: 18px;
+            text-shadow: 0 0 8px currentColor;
+        }
+        .tier-selected-marker {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            font-family: 'Trade Winds', sans-serif;
+            font-size: 9px;
+            letter-spacing: 0.2em;
+            color: currentColor;
+            background: rgba(0,0,0,0.7);
+            border: 1px solid currentColor;
+            padding: 3px 8px;
+            opacity: 0;
+            transform: translateY(-4px);
+            transition: all 0.25s ease;
+            text-shadow: 0 0 8px currentColor;
+            z-index: 3;
+        }
+        .tier-card.selected .tier-selected-marker {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* ═══════════════ ACTION BUTTONS ═══════════════ */
+        .action-grid {
+            display: grid;
+            grid-template-columns: 2fr 2fr 2fr;
+            gap: 16px;
             margin-bottom: 16px;
         }
-        .battle-row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; flex-wrap: wrap; }
-        .battle-row:last-child { margin-bottom: 0; }
-        .battle-label { color: var(--muted); font-size: 13px; min-width: 130px; }
-        .battle-value { color: var(--text); font-weight: 600; font-family: 'SF Mono', monospace; }
-        .battle-stats { color: var(--muted); font-size: 13px; }
-        .battle-stats span { color: var(--text); font-weight: 600; }
-        .net-positive { color: var(--solana-green) !important; }
-        .net-negative { color: var(--err) !important; }
+        .action-utility-row {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 38px;
+        }
+        .action-btn {
+            position: relative;
+            font-family: 'Trade Winds', sans-serif;
+            font-size: 13px;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            padding: 18px 22px;
+            border: 2px solid currentColor;
+            background: rgba(0,0,0,0.55);
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.25s ease;
+            text-align: center;
+            overflow: hidden;
+            text-shadow: 0 0 8px currentColor;
+            font-weight: normal;
+        }
+        .action-btn::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: repeating-linear-gradient(
+                0deg, transparent, transparent 2px,
+                rgba(0,0,0,0.1) 2px, rgba(0,0,0,0.1) 4px
+            );
+            pointer-events: none;
+        }
+        .action-btn .label { position: relative; z-index: 1; display: block; font-size: 13px; }
+        .action-btn .sublabel {
+            position: relative;
+            z-index: 1;
+            display: block;
+            font-family: 'Lora', serif;
+            font-style: italic;
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: none;
+            letter-spacing: 0;
+            margin-top: 6px;
+            text-shadow: none;
+        }
+        .action-btn.mint { color: var(--tier-2); }
+        .action-btn.stake { color: var(--tier-1); }
+        .action-btn.unstake { color: var(--tier-3); }
+        .action-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            background: rgba(0,0,0,0.3);
+        }
+        .action-btn.mint:hover:not(:disabled) { box-shadow: 0 8px 28px rgba(0,0,0,0.5), 0 0 22px rgba(0,240,255,0.45); }
+        .action-btn.stake:hover:not(:disabled) { box-shadow: 0 8px 28px rgba(0,0,0,0.5), 0 0 22px rgba(0,179,107,0.45); }
+        .action-btn.unstake:hover:not(:disabled) { box-shadow: 0 8px 28px rgba(0,0,0,0.5), 0 0 22px rgba(230,61,0,0.45); }
+        .action-btn:active:not(:disabled) { transform: translateY(0); }
+        .action-btn:disabled {
+            opacity: 0.32;
+            cursor: not-allowed;
+            color: var(--text-muted) !important;
+            border-color: var(--border) !important;
+            text-shadow: none;
+        }
+        .action-btn:disabled .sublabel { color: var(--text-muted); }
+        .util-btn {
+            font-family: 'Trade Winds', sans-serif;
+            font-size: 11px;
+            letter-spacing: 0.14em;
+            padding: 10px 18px;
+            border: 1px solid var(--border-strong);
+            background: rgba(0,0,0,0.4);
+            color: var(--text-dim);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .util-btn:hover:not(:disabled) {
+            color: var(--text);
+            border-color: var(--tier-2);
+            box-shadow: 0 0 14px rgba(0,240,255,0.25);
+        }
+        .util-btn.connect {
+            font-size: 12px;
+            padding: 12px 22px;
+            color: var(--tier-2);
+            border-color: var(--tier-2);
+            text-shadow: 0 0 8px var(--tier-2);
+        }
+        .util-btn.connect:hover:not(:disabled) {
+            background: rgba(0,240,255,0.08);
+            box-shadow: 0 0 18px rgba(0,240,255,0.5);
+        }
+        .util-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ═══════════════ BLINK SECTION ═══════════════ */
+        .blink-section {
+            background: linear-gradient(135deg, rgba(0,240,255,0.06), rgba(255,215,0,0.04)), var(--bg-card);
+            border: 1px solid var(--border-strong);
+            border-radius: 4px;
+            padding: 28px;
+            margin-bottom: 38px;
+            position: relative;
+            overflow: hidden;
+        }
+        .blink-section::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.06) 2px, rgba(0,0,0,0.06) 4px);
+            pointer-events: none;
+        }
+        .blink-section > * { position: relative; z-index: 1; }
+
+        .blink-section-meta {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-bottom: 22px;
+            line-height: 1.6;
+        }
+        .blink-section-meta a {
+            color: var(--tier-2);
+            text-decoration: none;
+            border-bottom: 1px dotted var(--tier-2);
+        }
+        .blink-section-meta a:hover {
+            text-shadow: 0 0 8px var(--tier-2);
+        }
+
+        .blink-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
+
+        .blink-card {
+            background: rgba(0,0,0,0.4);
+            border: 2px solid;
+            border-radius: 6px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+        .blink-card.evergreen { border-color: var(--tier-1); color: var(--tier-1); }
+        .blink-card.aquashrine { border-color: var(--tier-2); color: var(--tier-2); }
+        .blink-card.magmamine { border-color: var(--tier-3); color: var(--tier-3); }
+        .blink-card.king { border-color: var(--tier-4); color: var(--tier-4); }
+
+        .blink-card:hover { transform: translateY(-3px); }
+        .blink-card.evergreen:hover { box-shadow: 0 8px 24px rgba(0,179,107,0.35); }
+        .blink-card.aquashrine:hover { box-shadow: 0 8px 24px rgba(0,240,255,0.35); }
+        .blink-card.magmamine:hover { box-shadow: 0 8px 24px rgba(230,61,0,0.35); }
+        .blink-card.king:hover { box-shadow: 0 8px 24px rgba(255,215,0,0.45); }
+
+        .blink-card-image {
+            width: 100%;
+            aspect-ratio: 1;
+            background-size: cover;
+            background-position: center;
+            background-color: rgba(0,0,0,0.5);
+            border: 1px solid currentColor;
+            border-radius: 4px;
+        }
+        .blink-card-title {
+            font-family: 'Trade Winds', sans-serif;
+            font-size: 14px;
+            letter-spacing: 0.04em;
+            color: currentColor;
+            text-shadow: 0 0 8px currentColor;
+            margin: 0;
+            line-height: 1.2;
+        }
+        .blink-card-desc {
+            font-family: 'Lora', serif;
+            font-style: italic;
+            font-size: 12px;
+            color: var(--text-dim);
+            line-height: 1.4;
+            margin: 0;
+            flex-grow: 1;
+        }
+        .blink-card-button {
+            font-family: 'Trade Winds', sans-serif;
+            font-size: 11px;
+            letter-spacing: 0.14em;
+            padding: 11px 14px;
+            border: 1px solid currentColor;
+            background: rgba(0,0,0,0.4);
+            color: currentColor;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-shadow: 0 0 6px currentColor;
+            margin-top: auto;
+        }
+        .blink-card-button:hover:not(:disabled) {
+            background: currentColor;
+            color: #000;
+            text-shadow: none;
+        }
+        .blink-card-button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        @media (max-width: 880px) {
+            .blink-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 520px) {
+            .blink-grid { grid-template-columns: 1fr; }
+        }
+        @media (min-width: 881px) {
+            .blink-card-title { font-size: 15px; }
+            .blink-card-desc { font-size: 13px; }
+            .blink-card-button { font-size: 12px; padding: 12px 16px; }
+            .blink-section-meta { font-size: 12px; }
+        }
+
+        /* ═══════════════ BATTLE SIM ═══════════════ */
+        .battle-sim {
+            background:
+                linear-gradient(135deg, rgba(255,215,0,0.05), rgba(230,61,0,0.04)),
+                var(--bg-card);
+            border: 1px solid var(--border-strong);
+            border-radius: 4px;
+            padding: 28px;
+            margin-bottom: 38px;
+            position: relative;
+            overflow: hidden;
+        }
+        .battle-sim::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: repeating-linear-gradient(
+                0deg, transparent, transparent 2px,
+                rgba(0,0,0,0.06) 2px, rgba(0,0,0,0.06) 4px
+            );
+            pointer-events: none;
+        }
+        .battle-sim > * { position: relative; z-index: 1; }
+        .battle-sim-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 22px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .battle-sim-title {
+            font-family: 'Trade Winds', sans-serif;
+            font-size: 17px;
+            letter-spacing: 0.08em;
+            color: var(--tier-4);
+            text-shadow: 0 0 10px rgba(255,215,0,0.4);
+            margin: 0;
+        }
+        .battle-sim-sub {
+            font-family: 'Lora', serif;
+            font-style: italic;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        .battle-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+            margin-bottom: 22px;
+        }
+        .battle-stat-card {
+            background: rgba(0,0,0,0.35);
+            border: 1px solid var(--border);
+            border-left: 2px solid var(--tier-2);
+            padding: 14px 16px;
+        }
+        .battle-stat-card.coin { border-left-color: var(--tier-4); }
+        .battle-stat-card.capmon { border-left-color: var(--tier-1); }
+        .battle-stat-card.mult { border-left-color: var(--tier-3); }
+        .battle-stat-label {
+            font-family: 'Trade Winds', sans-serif;
+            font-size: 9px;
+            letter-spacing: 0.2em;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+        .battle-stat-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 18px;
+            color: var(--text);
+            font-weight: 600;
+            line-height: 1.3;
+            word-break: break-word;
+        }
+        .battle-stat-value.coin { color: var(--tier-4); text-shadow: 0 0 6px rgba(255,215,0,0.3); }
+        .battle-stat-value.mult { color: var(--tier-3); text-shadow: 0 0 6px rgba(230,61,0,0.3); }
+        .battle-stat-value.small { font-size: 13px; }
+        .battle-action-row {
+            display: flex;
+            gap: 18px;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+        .battle-btn {
+            font-family: 'Trade Winds', sans-serif;
+            font-size: 14px;
+            letter-spacing: 0.12em;
+            padding: 16px 32px;
+            border: 2px solid var(--tier-3);
+            background: rgba(230,61,0,0.1);
+            color: var(--tier-3);
+            cursor: pointer;
+            transition: all 0.25s ease;
+            text-shadow: 0 0 10px var(--tier-3);
+        }
+        .battle-btn:hover:not(:disabled) {
+            background: var(--tier-3);
+            color: #000;
+            text-shadow: none;
+            box-shadow: 0 0 24px rgba(230,61,0,0.6);
+            transform: translateY(-1px);
+        }
+        .battle-btn:disabled { opacity: 0.32; cursor: not-allowed; }
+        .battle-stats-text {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            color: var(--text-dim);
+        }
+        .battle-stats-text strong { color: var(--text); font-weight: 600; }
+        .battle-stats-text .net-positive { color: var(--ok); text-shadow: 0 0 4px var(--ok); }
+        .battle-stats-text .net-negative { color: var(--err); text-shadow: 0 0 4px var(--err); }
+
+        /* ═══════════════ TERMINAL LOG ═══════════════ */
+        .status-panel {
+            background: var(--bg-deep);
+            border: 1px solid var(--border-strong);
+            border-radius: 4px;
+            margin-bottom: 38px;
+            position: relative;
+            overflow: hidden;
+        }
+        .status-header {
+            background: rgba(0,0,0,0.6);
+            border-bottom: 1px solid var(--border);
+            padding: 12px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: 'Trade Winds', sans-serif;
+            font-size: 11px;
+            letter-spacing: 0.2em;
+            color: var(--text-dim);
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .status-header-left { display: flex; align-items: center; gap: 12px; }
+        .terminal-dots { display: flex; gap: 6px; }
+        .terminal-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--err); }
+        .terminal-dot.amber { background: var(--warn); }
+        .terminal-dot.green { background: var(--ok); }
+        .status-header-right {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            color: var(--text-muted);
+            text-transform: none;
+            letter-spacing: 0.04em;
+        }
+        .status {
+            background: var(--bg-deep);
+            padding: 22px 22px 22px 24px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12.5px;
+            line-height: 1.7;
+            white-space: pre-wrap;
+            word-break: break-all;
+            min-height: 220px;
+            max-height: 360px;
+            overflow-y: auto;
+            color: var(--text-dim);
+            position: relative;
+        }
+        .status::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: repeating-linear-gradient(
+                0deg, transparent, transparent 3px,
+                rgba(0,255,255,0.015) 3px, rgba(0,255,255,0.015) 4px
+            );
+            pointer-events: none;
+        }
+        .status::-webkit-scrollbar { width: 8px; }
+        .status::-webkit-scrollbar-track { background: rgba(0,0,0,0.3); }
+        .status::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 4px; }
+        .status::-webkit-scrollbar-thumb:hover { background: var(--tier-2); }
+        .status > div { position: relative; z-index: 1; }
+        .status .ok { color: var(--ok); text-shadow: 0 0 4px rgba(0,179,107,0.3); }
+        .status .err { color: var(--err); text-shadow: 0 0 4px rgba(255,85,119,0.3); }
+        .status .warn { color: var(--warn); text-shadow: 0 0 4px rgba(255,170,0,0.3); }
+        .status .muted { color: var(--text-muted); }
+        .status .header { color: var(--tier-2); font-weight: 600; margin-top: 6px; text-shadow: 0 0 6px rgba(0,240,255,0.3); }
+        .status .hint { color: var(--text-dim); font-style: italic; }
+        .status .divider { border-top: 1px solid rgba(255,255,255,0.06); margin: 8px 0; padding: 0; height: 0; }
+
+        /* ═══════════════ FOOTER CTA ═══════════════ */
+        .cta-footer {
+            text-align: center;
+            padding: 60px 28px 70px;
+            border-top: 1px solid var(--border);
+            background: radial-gradient(ellipse 70% 80% at 50% 100%, rgba(255,215,0,0.06) 0%, transparent 60%);
+            position: relative;
+        }
+        .cta-footer-eyebrow {
+            font-family: 'Trade Winds', sans-serif;
+            font-size: 10px;
+            letter-spacing: 0.32em;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+        }
+        .cta-footer-title {
+            font-family: 'Trade Winds', sans-serif;
+            font-size: clamp(28px, 4vw, 42px);
+            color: var(--text);
+            letter-spacing: 0.04em;
+            margin: 0 0 26px;
+        }
+        .cta-footer-title .accent { color: var(--tier-4); text-shadow: 0 0 18px rgba(255,215,0,0.5); }
+        .cta-footer-btn {
+            display: inline-block;
+            font-family: 'Trade Winds', sans-serif;
+            font-size: 14px;
+            letter-spacing: 0.18em;
+            padding: 18px 42px;
+            border: 2px solid var(--tier-4);
+            background: rgba(255,215,0,0.1);
+            color: var(--tier-4);
+            text-decoration: none;
+            text-shadow: 0 0 12px var(--tier-4);
+            transition: all 0.3s ease;
+            margin-bottom: 36px;
+            animation: cta-pulse 3s ease-in-out infinite;
+        }
+        @keyframes cta-pulse {
+            0%, 100% { box-shadow: 0 0 12px rgba(255,215,0,0.3); }
+            50% { box-shadow: 0 0 28px rgba(255,215,0,0.65); }
+        }
+        .cta-footer-btn:hover {
+            background: var(--tier-4);
+            color: #000;
+            text-shadow: none;
+            box-shadow: 0 0 36px rgba(255,215,0,0.8);
+        }
+        .trust-row {
+            display: flex;
+            gap: 18px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 24px;
+        }
+        .trust-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Trade Winds', sans-serif;
+            font-size: 10px;
+            letter-spacing: 0.16em;
+            color: var(--text-dim);
+            padding: 8px 14px;
+            background: rgba(0,0,0,0.4);
+            border: 1px solid var(--border);
+        }
+        .trust-badge .diamond { font-size: 11px; }
+        .footer-meta {
+            font-family: 'Lora', serif;
+            font-style: italic;
+            font-size: 12px;
+            color: var(--text-muted);
+            line-height: 1.6;
+            max-width: 620px;
+            margin: 18px auto 0;
+        }
+        .footer-meta code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            background: rgba(0,0,0,0.4);
+            padding: 2px 6px;
+            border: 1px solid var(--border);
+            font-style: normal;
+            word-break: break-all;
+        }
+
+        /* ═══════════════ MOBILE ═══════════════ */
+        @media (max-width: 880px) {
+            main { padding: 36px 18px 50px; }
+            .tier-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
+            .action-grid { grid-template-columns: 1fr; }
+            .battle-grid { grid-template-columns: 1fr; }
+            .hero { padding: 90px 18px 40px; }
+            .hero-back { top: 16px; left: 16px; }
+            .battle-action-row { flex-direction: column; align-items: stretch; }
+            .battle-btn { width: 100%; }
+
+            /* Chamber row: 2 cols, smaller, no spike ring */
+            .chamber-tier-row { grid-template-columns: repeat(2, 1fr); gap: 22px; }
+            .chamber-button { min-height: 440px !important; padding: 160px 70px !important; }
+	    .chamber-tier-section { padding: 110px 0 110px !important; }
+            #chamber-tier1 .chamber-button::before,
+            #chamber-tier2 .chamber-button::before,
+            #chamber-tier3 .chamber-button::before,
+            #chamber-tier4 .chamber-button::before { display: none !important; }
+            .box-wall-top, .box-wall-bottom { height: 60px; }
+            .box-wall-left, .box-wall-right { width: 50px; }
+            .box-wall-corner { width: 90px; height: 90px; }
+        }
+        @media (max-width: 520px) {
+            .tier-grid { grid-template-columns: 1fr; }
+            .wallet-bar { padding: 14px; gap: 10px; }
+            .wallet-bar-status { font-size: 11px; }
+            .wallet-pubkey { font-size: 11px; }
+            .battle-sim { padding: 18px; }
+            .status { padding: 14px; font-size: 11.5px; }
+            .genre-banner-inner { font-size: 9px; gap: 18px; }
+
+            /* Chamber row: single column on phones */
+            .chamber-tier-row { grid-template-columns: 1fr; gap: 26px; }
+            .chamber-button { min-height: 480px !important; padding: 180px 80px !important; }
+	    .chamber-tier-section { padding: 100px 0 100px !important; }
+        }
+
+        /* ═══════════════ DESKTOP: BIGGER SUB-TEXT ═══════════════
+           Bumps tier card sub, action button sub, footer meta —
+           the small italic + label text that was hard to read.
+           ════════════════════════════════════════════════════════ */
+        @media (min-width: 881px) {
+            .tier-card-sub          { font-size: 14px; min-height: 38px; line-height: 1.5; }
+            .tier-stat-row          { font-size: 13px; }
+            .tier-stat-value        { font-size: 14px; }
+            .tier-stat-value.big    { font-size: 20px; }
+            .tier-badge             { font-size: 10px; padding: 5px 10px; }
+            .tier-card-name         { font-size: 26px; }
+
+            .action-btn .label      { font-size: 14px; }
+            .action-btn .sublabel   { font-size: 13px; }
+
+            .footer-meta            { font-size: 14px; line-height: 1.7; max-width: 700px; }
+            .footer-meta code       { font-size: 12.5px; }
+            .trust-badge            { font-size: 11px; padding: 9px 16px; }
+
+            .capbot-status-detail   { font-size: 15px; }
+
+            .battle-stat-value.small { font-size: 14px; }
+
+            .chamber-sublabel       { font-size: 14px; }
+        }
+
+        /* ═══════════════ INITIAL LOAD ═══════════════ */
+        @keyframes fade-up {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .hero, .wallet-bar, .capbot-status, .chamber-tier-section, .tier-grid-wrap, .action-grid, .action-utility-row, .blink-section, .battle-sim, .status-panel, .cta-footer {
+            animation: fade-up 0.7s ease both;
+        }
+        .wallet-bar              { animation-delay: 0.08s; }
+        .capbot-status           { animation-delay: 0.14s; }
+        .chamber-tier-section    { animation-delay: 0.18s; }
+        .tier-grid-wrap          { animation-delay: 0.24s; }
+        .action-grid             { animation-delay: 0.30s; }
+        .action-utility-row      { animation-delay: 0.36s; }
+        .battle-sim              { animation-delay: 0.42s; }
+        .status-panel            { animation-delay: 0.48s; }
+        .cta-footer              { animation-delay: 0.54s; }
+
+        #tierSelect { display: none; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Capmon</h1>
-        <p class="subtitle">On-chain devnet · Day 4 · stake + unstake</p>
 
-        <div class="actions">
-            <button id="connectBtn">Connect Phantom</button>
-            <button id="testProgramBtn" class="secondary" disabled>Test program</button>
-            <button id="fetchCnftsBtn" class="secondary" disabled>Show my cNFTs</button>
-            <button id="resetBtn" class="secondary">Reset</button>
+    <!-- ═══════════════ GENRE BANNER ═══════════════ -->
+    <div class="genre-banner">
+        <div class="genre-banner-inner">
+            <span>THE WORLD'S FIRST TRAIN-TO-EARN GAME</span>
+            <span class="genre-banner-sep">&#9670;</span>
+            <span>POWERED BY ON-CHAIN AI AGENTS</span>
+            <span class="genre-banner-sep">&#9670;</span>
+            <span>LIVE ON SOLANA DEVNET</span>
+            <span class="genre-banner-sep">&#9670;</span>
+            <span>STAKE &amp; EARN</span>
+            <span class="genre-banner-sep">&#9670;</span>
+            <span>THE WORLD'S FIRST TRAIN-TO-EARN GAME</span>
+            <span class="genre-banner-sep">&#9670;</span>
+            <span>POWERED BY ON-CHAIN AI AGENTS</span>
+            <span class="genre-banner-sep">&#9670;</span>
         </div>
-
-        <div class="tier-row">
-            <label for="tierSelect">Tier:</label>
-            <select id="tierSelect">
-                <option value="0">0 · Evergreen (0M)</option>
-                <option value="1">1 · Aquashrine (15M)</option>
-                <option value="2">2 · Magmamine (40M)</option>
-                <option value="3">3 · King (55M)</option>
-            </select>
-            <button id="mintBtn">Mint Demo cNFT</button>
-            <button id="stakeBtn" disabled>Stake first cNFT</button>
-            <button id="unstakeBtn" class="danger" disabled>Unstake first staked cNFT</button>
-        </div>
-
-        <div class="battle-sim">
-            <div class="battle-row">
-                <span class="battle-label">Cap Coins:</span>
-                <span class="battle-value" id="capCoins">10,000</span>
-            </div>
-            <div class="battle-row">
-                <span class="battle-label">Active Capmon:</span>
-                <span class="battle-value" id="activeCapmon">None — stake to activate</span>
-            </div>
-            <div class="battle-row">
-                <span class="battle-label">Tier multiplier:</span>
-                <span class="battle-value" id="activeMultiplier">1.0× (no NFT staked)</span>
-            </div>
-            <div class="battle-row">
-                <button id="battleBtn">Battle! (bet 1,000)</button>
-                <span class="battle-stats">Wins: <span id="winCount">0</span> · Losses: <span id="lossCount">0</span> · Net: <span id="netEarned">+0</span></span>
-            </div>
-        </div>
-
-        <div class="status" id="status">Ready. Click "Connect Phantom" to begin.</div>
     </div>
 
+    <!-- ═══════════════ HERO ═══════════════ -->
+    <header class="hero">
+        <a href="https://capmon.fun/?play=1#play" class="hero-back">&larr; BACK TO GAME</a>
+        <div class="hero-eyebrow">&#9670; THE STAKING DAPP &#9670;</div>
+        <h1 class="hero-title">Capmon</h1>
+        <p class="hero-tagline">Mint your Capmon. Stake to activate your Capbot. Earn Cap Coins on-chain — 24/7 — with cryptographically-proven AI brain growth.</p>
+        <div class="hero-meta">
+            <span class="hero-meta-dot"></span>
+            SOLANA DEVNET &#9679; LIVE &#9679; PHANTOM CONNECTED IN ONE CLICK
+        </div>
+    </header>
+
+    <!-- ═══════════════ MAIN ═══════════════ -->
+    <main>
+
+        <!-- WALLET BAR -->
+        <section class="wallet-bar" id="walletBar">
+            <div class="wallet-bar-status">
+                <span class="wallet-status-dot"></span>
+                <span class="wallet-status-label" id="walletStatusLabel">DISCONNECTED</span>
+                <span class="wallet-pubkey" id="walletPubkeyText"></span>
+                <span class="wallet-balance" id="walletBalanceText" style="display:none;">SOL <span class="amount">0.0000</span></span>
+            </div>
+            <button id="connectBtn" class="util-btn connect">Connect Phantom</button>
+            <button id="resetBtn" class="util-btn">Reset</button>
+        </section>
+
+        <!-- CAPBOT STATUS PANEL -->
+        <section class="capbot-status" id="capbotStatusPanel">
+            <div class="capbot-status-eyebrow">&#9670; YOUR ACTIVE CAPBOT</div>
+            <div class="capbot-status-headline inactive" id="capbotStatusHeadline">No active Capbot</div>
+            <div class="capbot-status-detail" id="capbotStatusDetail">Mint a Capmon NFT and stake it to activate an autonomous AI Capbot that earns Cap Coins for you 24/7. Brain steps grow on-chain — every upgrade carries an Ed25519 cryptographic proof.</div>
+        </section>
+
+        <!-- ═══════════════ CHAMBER TIER PICKERS (NEW) ═══════════════ -->
+        <h2 class="section-title">&#9670; Choose Your Tier &#9670;</h2>
+        <section class="chamber-tier-section">
+            <div class="chamber-tier-row">
+
+                <div id="chamber-tier1">
+                    <button class="chamber-button" data-tier="0" type="button" aria-label="Select Evergreen tier">
+                        <span class="chamber-selected-badge">&#9670; SELECTED</span>
+                        <span class="chamber-content">
+                            <span class="chamber-label">Evergreen</span>
+                            <span class="chamber-sublabel">1.0× &middot; 0–14M Brain</span>
+                        </span>
+                    </button>
+                </div>
+
+                <div id="chamber-tier2">
+                    <button class="chamber-button" data-tier="1" type="button" aria-label="Select Aquashrine tier">
+                        <span class="chamber-selected-badge">&#9670; SELECTED</span>
+                        <span class="chamber-content">
+                            <span class="chamber-label">Aquashrine</span>
+                            <span class="chamber-sublabel">1.4× &middot; 15M–39M Brain</span>
+                        </span>
+                    </button>
+                </div>
+
+                <div id="chamber-tier3">
+                    <button class="chamber-button" data-tier="2" type="button" aria-label="Select Magmamine tier">
+                        <span class="chamber-selected-badge">&#9670; SELECTED</span>
+                        <span class="chamber-content">
+                            <span class="chamber-label">Magmamine</span>
+                            <span class="chamber-sublabel">1.9× &middot; 40M–54M Brain</span>
+                        </span>
+                    </button>
+                </div>
+
+                <div id="chamber-tier4">
+                    <button class="chamber-button" data-tier="3" type="button" aria-label="Select King tier">
+                        <span class="chamber-selected-badge">&#9670; SELECTED</span>
+                        <span class="chamber-content">
+                            <span class="chamber-label">King</span>
+                            <span class="chamber-sublabel">2.8× &middot; 55M–60M Brain</span>
+                        </span>
+                    </button>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- TIER GRID — lite cards (mirror chamber selection, also clickable) -->
+        <div class="tier-grid-wrap">
+            <div class="tier-grid" id="tierGrid">
+
+                <div class="tier-card evergreen" data-tier="0">
+                    <div class="tier-corner tl"></div>
+                    <div class="tier-corner tr"></div>
+                    <div class="tier-corner bl"></div>
+                    <div class="tier-corner br"></div>
+                    <div class="tier-selected-marker">&#9670; SELECTED</div>
+                    <div class="tier-badge">ENTRY TIER</div>
+                    <div class="tier-card-name">Evergreen</div>
+                    <div class="tier-card-sub">Seed Brain — fully trainable from zero to 60M steps</div>
+                    <div class="tier-stats">
+                        <div class="tier-stat-row">
+                            <span class="tier-stat-label">Brain range</span>
+                            <span class="tier-stat-value">0–14M</span>
+                        </div>
+                        <div class="tier-stat-row">
+                            <span class="tier-stat-label">Wager multiplier</span>
+                            <span class="tier-stat-value big">1.0×</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tier-card aquashrine" data-tier="1">
+                    <div class="tier-corner tl"></div>
+                    <div class="tier-corner tr"></div>
+                    <div class="tier-corner bl"></div>
+                    <div class="tier-corner br"></div>
+                    <div class="tier-selected-marker">&#9670; SELECTED</div>
+                    <div class="tier-badge">MOST POPULAR</div>
+                    <div class="tier-card-name">Aquashrine</div>
+                    <div class="tier-card-sub">Trained Brain — pre-loaded with 15M training steps</div>
+                    <div class="tier-stats">
+                        <div class="tier-stat-row">
+                            <span class="tier-stat-label">Brain range</span>
+                            <span class="tier-stat-value">15M–39M</span>
+                        </div>
+                        <div class="tier-stat-row">
+                            <span class="tier-stat-label">Wager multiplier</span>
+                            <span class="tier-stat-value big">1.4×</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tier-card magmamine" data-tier="2">
+                    <div class="tier-corner tl"></div>
+                    <div class="tier-corner tr"></div>
+                    <div class="tier-corner bl"></div>
+                    <div class="tier-corner br"></div>
+                    <div class="tier-selected-marker">&#9670; SELECTED</div>
+                    <div class="tier-badge">HIGH VALUE</div>
+                    <div class="tier-card-name">Magmamine</div>
+                    <div class="tier-card-sub">Advanced Brain — 40M steps, high-performance from day one</div>
+                    <div class="tier-stats">
+                        <div class="tier-stat-row">
+                            <span class="tier-stat-label">Brain range</span>
+                            <span class="tier-stat-value">40M–54M</span>
+                        </div>
+                        <div class="tier-stat-row">
+                            <span class="tier-stat-label">Wager multiplier</span>
+                            <span class="tier-stat-value big">1.9×</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tier-card king" data-tier="3">
+                    <div class="tier-corner tl"></div>
+                    <div class="tier-corner tr"></div>
+                    <div class="tier-corner bl"></div>
+                    <div class="tier-corner br"></div>
+                    <div class="tier-selected-marker">&#9670; SELECTED</div>
+                    <div class="tier-badge">MAXIMUM CAPACITY</div>
+                    <div class="tier-card-name">King</div>
+                    <div class="tier-card-sub">Full Brain — 60M-step ceiling, the strongest Capbot</div>
+                    <div class="tier-stats">
+                        <div class="tier-stat-row">
+                            <span class="tier-stat-label">Brain range</span>
+                            <span class="tier-stat-value">55M–60M</span>
+                        </div>
+                        <div class="tier-stat-row">
+                            <span class="tier-stat-label">Wager multiplier</span>
+                            <span class="tier-stat-value big">2.8×</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- HIDDEN TIER SELECT (preserved for JS compatibility) -->
+        <select id="tierSelect">
+            <option value="0">0 · Evergreen (0M)</option>
+            <option value="1">1 · Aquashrine (15M)</option>
+            <option value="2">2 · Magmamine (40M)</option>
+            <option value="3">3 · King (55M)</option>
+        </select>
+
+        <!-- PRIMARY ACTIONS -->
+        <h2 class="section-title">&#9670; On-Chain Actions &#9670;</h2>
+        <div class="action-grid">
+
+            <button id="mintBtn" class="action-btn mint">
+                <span class="label">Mint Capmon</span>
+                <span class="sublabel">Devnet faucet · free demo cNFT</span>
+            </button>
+
+            <button id="stakeBtn" class="action-btn stake" disabled>
+                <span class="label">Stake &amp; Activate</span>
+                <span class="sublabel">Lock your NFT · activate your Capbot</span>
+            </button>
+
+            <button id="unstakeBtn" class="action-btn unstake" disabled>
+                <span class="label">Unstake</span>
+                <span class="sublabel">Release your NFT · stop the Capbot</span>
+            </button>
+
+        </div>
+
+        <div class="action-utility-row">
+            <button id="testProgramBtn" class="util-btn" disabled>&#9670; Verify Program</button>
+            <button id="fetchCnftsBtn" class="util-btn" disabled>&#9670; Refresh My NFTs</button>
+        </div>
+
+<!-- ═══════════════ BLINK SECTION ═══════════════ -->
+        <h2 class="section-title">&#9889; One-Click Mint + Stake via Solana Blink &#9889;</h2>
+        <section class="blink-section" id="blinkSection">
+            <div class="blink-section-meta">
+                Spec-compliant Solana Action &middot; live on devnet &middot; endpoint:
+                <a href="https://capmon-hackathon.web.app/actionMintStake?tier=0" target="_blank" rel="noopener">capmon-hackathon.web.app/actionMintStake?tier=N</a>
+                <br>
+                <em>The cards below are rendered live by fetching our own Blink endpoint — same data any Blink-aware client (Dialect, Phantom, etc.) would render.</em>
+            </div>
+            <div class="blink-grid" id="blinkGrid">
+                <div class="blink-card evergreen" data-tier="0">
+                    <div class="blink-card-image" id="blinkImage0"></div>
+                    <h3 class="blink-card-title" id="blinkTitle0">Loading…</h3>
+                    <p class="blink-card-desc" id="blinkDesc0">Fetching from Blink endpoint…</p>
+                    <button class="blink-card-button" data-tier="0" disabled>&#9889; Mint + Stake</button>
+                </div>
+                <div class="blink-card aquashrine" data-tier="1">
+                    <div class="blink-card-image" id="blinkImage1"></div>
+                    <h3 class="blink-card-title" id="blinkTitle1">Loading…</h3>
+                    <p class="blink-card-desc" id="blinkDesc1">Fetching from Blink endpoint…</p>
+                    <button class="blink-card-button" data-tier="1" disabled>&#9889; Mint + Stake</button>
+                </div>
+                <div class="blink-card magmamine" data-tier="2">
+                    <div class="blink-card-image" id="blinkImage2"></div>
+                    <h3 class="blink-card-title" id="blinkTitle2">Loading…</h3>
+                    <p class="blink-card-desc" id="blinkDesc2">Fetching from Blink endpoint…</p>
+                    <button class="blink-card-button" data-tier="2" disabled>&#9889; Mint + Stake</button>
+                </div>
+                <div class="blink-card king" data-tier="3">
+                    <div class="blink-card-image" id="blinkImage3"></div>
+                    <h3 class="blink-card-title" id="blinkTitle3">Loading…</h3>
+                    <p class="blink-card-desc" id="blinkDesc3">Fetching from Blink endpoint…</p>
+                    <button class="blink-card-button" data-tier="3" disabled>&#9889; Mint + Stake</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- BATTLE SIMULATOR -->
+        <section class="battle-sim">
+            <div class="battle-sim-header">
+                <h3 class="battle-sim-title">&#9670; Battle Simulator</h3>
+                <span class="battle-sim-sub">Off-chain demo — proves the tier multiplier flow</span>
+            </div>
+
+            <div class="battle-grid">
+                <div class="battle-stat-card coin">
+                    <div class="battle-stat-label">Cap Coins</div>
+                    <div class="battle-stat-value coin" id="capCoins">10,000</div>
+                </div>
+                <div class="battle-stat-card capmon">
+                    <div class="battle-stat-label">Active Capmon</div>
+                    <div class="battle-stat-value small" id="activeCapmon">None — stake to activate</div>
+                </div>
+                <div class="battle-stat-card mult">
+                    <div class="battle-stat-label">Tier Multiplier</div>
+                    <div class="battle-stat-value mult" id="activeMultiplier">1.0×</div>
+                </div>
+            </div>
+
+            <div class="battle-action-row">
+                <button id="battleBtn" class="battle-btn">&#9670; Battle &middot; Bet 1,000</button>
+                <div class="battle-stats-text">
+                    Wins: <strong id="winCount">0</strong> &nbsp;&middot;&nbsp;
+                    Losses: <strong id="lossCount">0</strong> &nbsp;&middot;&nbsp;
+                    Net: <strong id="netEarned">+0</strong>
+                </div>
+            </div>
+        </section>
+
+        <!-- TERMINAL -->
+        <section class="status-panel">
+            <div class="status-header">
+                <div class="status-header-left">
+                    <div class="terminal-dots">
+                        <div class="terminal-dot"></div>
+                        <div class="terminal-dot amber"></div>
+                        <div class="terminal-dot green"></div>
+                    </div>
+                    <span>SYSTEM LOG &nbsp;//&nbsp; ON-CHAIN TX TRACE</span>
+                </div>
+                <div class="status-header-right">solana devnet · helius rpc</div>
+            </div>
+            <div class="status" id="status">Ready. Click "Connect Phantom" to begin.</div>
+        </section>
+
+    </main>
+
+    <!-- ═══════════════ FOOTER CTA ═══════════════ -->
+    <footer class="cta-footer">
+        <div class="cta-footer-eyebrow">&#9670; YOUR CAPBOT IS WAITING &#9670;</div>
+        <h2 class="cta-footer-title">Play. Train. <span class="accent">Earn.</span></h2>
+        <a href="https://capmon.fun/?play=1#play" class="cta-footer-btn">&#9658;&nbsp;&nbsp;OPEN CAPMON GAME</a>
+
+        <div class="trust-row">
+            <div class="trust-badge"><span class="diamond" style="color:var(--tier-1);">&#9670;</span> ON-CHAIN VERIFIED</div>
+            <div class="trust-badge"><span class="diamond" style="color:var(--tier-2);">&#9670;</span> SOLANA DEVNET LIVE</div>
+            <div class="trust-badge"><span class="diamond" style="color:var(--tier-3);">&#9670;</span> ED25519 BRAIN PROOFS</div>
+            <div class="trust-badge"><span class="diamond" style="color:var(--tier-4);">&#9670;</span> COMPRESSED NFT TREE</div>
+        </div>
+
+        <p class="footer-meta">All transactions are signed by your Phantom wallet on Solana devnet. The capmon-staking program is deployed at <code>FSenbAEVTgTdfM2723xkk8A2Y5oD8wtmB2EhiWXzpqSg</code>. Brain upgrades carry server-signed Ed25519 proofs verified on-chain by an instruction-introspection sysvar parser.</p>
+    </footer>
+
+    <!-- ═══════════════ SCRIPT ═══════════════ -->
     <script type="module">
-        import { Connection, PublicKey, Transaction, ComputeBudgetProgram, SystemProgram } from 'https://esm.sh/@solana/web3.js@1.95.4';
+        import { Connection, PublicKey, Transaction, ComputeBudgetProgram, SystemProgram, VersionedTransaction } from 'https://esm.sh/@solana/web3.js@1.95.4';
         import * as anchor from 'https://esm.sh/@anchor-lang/core';
         import BN from 'https://esm.sh/bn.js@5';
 
@@ -151,7 +1869,11 @@
         const PROGRAM_ID = new PublicKey('FSenbAEVTgTdfM2723xkk8A2Y5oD8wtmB2EhiWXzpqSg');
         const PROGRAM_CONFIG_PDA = new PublicKey('2cJ12fXKyuFxJZ3PpQ4m6kBkgoUFtRoSQccKMZ9MrRZj');
         const STAKE_AUTHORITY_PDA = new PublicKey('8phyp78BGVaKP5PCombtiQhUFe6XK5b1AK7QUcruSNfp');
-        const MERKLE_TREE = '9FL7j28TEYHAPqXZyP82Yc1xriKh9aBKQc9U9dcSrWhU';
+        const KNOWN_TREES = [
+            '9FL7j28TEYHAPqXZyP82Yc1xriKh9aBKQc9U9dcSrWhU',
+            'E56FVXmnTqfm7TjmeLJtUdBaB32B5wEQEexFVf3ktB7r',
+        ];
+        const MERKLE_TREE = KNOWN_TREES[1];
         const BUBBLEGUM_PROGRAM_ID = new PublicKey('BGUMAp9Gq7iTEuizy4pqaxsTyUCBK68MDfK752saRPUY');
         const COMPRESSION_PROGRAM_ID = new PublicKey('mcmt6YrQEMKw8Mw43FmpRLmf7BqRnFMKmAcbxE3xkAW');
         const NOOP_PROGRAM_ID = new PublicKey('mnoopTCrg4p8ry25e4bcWA9XZjbNjMTfgYVGGEdRsf3');
@@ -180,6 +1902,13 @@
         const lossCountEl = document.getElementById('lossCount');
         const netEarnedEl = document.getElementById('netEarned');
 
+        const walletBarEl = document.getElementById('walletBar');
+        const walletStatusLabelEl = document.getElementById('walletStatusLabel');
+        const walletPubkeyTextEl = document.getElementById('walletPubkeyText');
+        const walletBalanceTextEl = document.getElementById('walletBalanceText');
+        const capbotHeadlineEl = document.getElementById('capbotStatusHeadline');
+        const capbotDetailEl = document.getElementById('capbotStatusDetail');
+
         let walletPubkey = null;
         let program = null;
         let userAssets = [];
@@ -188,11 +1917,73 @@
         let losses = 0;
         let activeStake = null;
 
+        // ════════════════════════════════════════════════════════
+        //   TIER SELECTION — syncs lite cards + chamber buttons
+        //   Both routes (lite click OR chamber click) update everything.
+        // ════════════════════════════════════════════════════════
+        function selectTierCard(tier) {
+            tierSelect.value = String(tier);
+            document.querySelectorAll('.tier-card').forEach(card => {
+                card.classList.toggle('selected', Number(card.dataset.tier) === tier);
+            });
+            document.querySelectorAll('.chamber-button').forEach(btn => {
+                btn.classList.toggle('selected', Number(btn.dataset.tier) === tier);
+            });
+        }
+        document.querySelectorAll('.tier-card').forEach(card => {
+            card.addEventListener('click', () => selectTierCard(Number(card.dataset.tier)));
+        });
+        document.querySelectorAll('.chamber-button').forEach(btn => {
+            btn.addEventListener('click', () => selectTierCard(Number(btn.dataset.tier)));
+        });
+        selectTierCard(0); // default: Evergreen
+
+        // ────────── Wallet bar ──────────
+        function updateWalletBarUI(opts = {}) {
+            if (walletPubkey) {
+                walletBarEl.classList.add('connected');
+                walletStatusLabelEl.textContent = 'CONNECTED';
+                const pk = walletPubkey.toBase58();
+                walletPubkeyTextEl.textContent = pk.slice(0, 6) + '…' + pk.slice(-4);
+                if (typeof opts.solBalance === 'number') {
+                    walletBalanceTextEl.style.display = '';
+                    walletBalanceTextEl.querySelector('.amount').textContent = opts.solBalance.toFixed(4);
+                }
+            } else {
+                walletBarEl.classList.remove('connected');
+                walletStatusLabelEl.textContent = 'DISCONNECTED';
+                walletPubkeyTextEl.textContent = '';
+                walletBalanceTextEl.style.display = 'none';
+            }
+        }
+        updateWalletBarUI();
+
+        // ────────── Capbot status panel ──────────
+        function updateCapbotStatusPanel() {
+            if (activeStake) {
+                const tier = Number(activeStake.tier);
+                const tierName = TIER_NAMES[tier];
+                const brainM = (Number(activeStake.brainSteps) / 1_000_000).toFixed(1);
+                const mult = TIER_MULTIPLIERS[tier].toFixed(1);
+                capbotHeadlineEl.classList.remove('inactive');
+                capbotHeadlineEl.innerHTML = '<span class="accent">' + tierName + '</span> Capbot &middot; ' + brainM + 'M brain steps &middot; ' + mult + '× multiplier';
+                capbotDetailEl.textContent = 'Your Capbot is staked and active on devnet. The capbot-server runs autonomous battles 24/7 and signs every brain upgrade with an Ed25519 proof. Open the My Capbots tab in-game for the full activity log.';
+            } else {
+                capbotHeadlineEl.classList.add('inactive');
+                capbotHeadlineEl.textContent = 'No active Capbot';
+                capbotDetailEl.textContent = 'Mint a Capmon NFT and stake it to activate an autonomous AI Capbot that earns Cap Coins for you 24/7. Brain steps grow on-chain — every upgrade carries an Ed25519 cryptographic proof.';
+            }
+        }
+
+        // ════════════════════════════════════════════════════════
+        //   TERMINAL HELPERS
+        // ════════════════════════════════════════════════════════
         function log(msg, cls) {
             const div = document.createElement('div');
             if (cls) div.className = cls;
             div.textContent = msg;
             statusEl.appendChild(div);
+            statusEl.scrollTop = statusEl.scrollHeight;
         }
         function divider() {
             const div = document.createElement('div');
@@ -200,6 +1991,92 @@
             statusEl.appendChild(div);
         }
         function clearLog() { statusEl.innerHTML = ''; }
+
+        // ════════════════════════════════════════════════════════
+        //   FRIENDLY ERROR — turns log dumps into actionable hints.
+        //   Raw error is sent to console.* for DevTools debugging.
+        // ════════════════════════════════════════════════════════
+        function friendlyError(err, action = 'Action') {
+            const errStr = (err && (err.message || String(err))) || '';
+            const errLogs = (err && err.logs) ? err.logs.join(' ') : '';
+            const combined = (errStr + ' ' + errLogs).toLowerCase();
+
+            if (combined.includes('already in use') || /asset.*frozen/.test(combined) || combined.includes('already staked')) {
+                return {
+                    message: 'This NFT is already staked',
+                    hint: 'Use the Unstake button below to release it first, then try again.'
+                };
+            }
+            if (combined.includes('user rejected') || combined.includes('rejected the request') || combined.includes('user cancelled')) {
+                return {
+                    message: 'You cancelled in Phantom',
+                    hint: 'No problem — click ' + action + ' again when you\'re ready to approve.'
+                };
+            }
+            if (combined.includes('insufficient') || combined.includes('not enough lamports') || combined.includes('not enough sol')) {
+                return {
+                    message: 'Not enough devnet SOL for fees',
+                    hint: 'Top up at faucet.solana.com — about 0.01 SOL is plenty.'
+                };
+            }
+            if (combined.includes('blockhash') || combined.includes('expired')) {
+                return {
+                    message: 'Network is slow — transaction expired',
+                    hint: 'Click ' + action + ' again. Devnet RPCs can be flaky during peak hours.'
+                };
+            }
+            if (combined.includes('phantom not detected') || combined.includes('not detected')) {
+                return {
+                    message: 'Phantom wallet not detected',
+                    hint: 'Install Phantom from phantom.com, then refresh this page.'
+                };
+            }
+            if (combined.includes('timeout') || combined.includes('failed to fetch') || combined.includes('network')) {
+                return {
+                    message: 'Connection issue with Solana RPC',
+                    hint: 'Wait a moment and try again. If this keeps happening, refresh the page.'
+                };
+            }
+            if (combined.includes('simulation failed') || combined.includes('preflight failed') || combined.includes('custom program error')) {
+                return {
+                    message: action + ' failed before sending',
+                    hint: 'Click Refresh My NFTs, then try again. Browser DevTools console (F12) has the full trace.'
+                };
+            }
+            if (combined.includes('idl') || combined.includes('failed to fetch idl')) {
+                return {
+                    message: 'Failed to load on-chain program',
+                    hint: 'Refresh the page — capmon_staking.json couldn\'t be fetched.'
+                };
+            }
+            return {
+                message: action + ' failed',
+                hint: 'Open browser DevTools console (F12) to see the full error trace.'
+            };
+        }
+
+        function logFriendlyError(err, action) {
+            console.error('[' + action + '] Full error:', err);
+            if (err && err.logs) console.log('[' + action + '] On-chain logs:', err.logs);
+            const f = friendlyError(err, action);
+            log('✗ ' + f.message, 'err');
+            log('   → ' + f.hint, 'hint');
+        }
+
+        // ────────── Recompute stake/unstake button states from local userAssets ──────────
+        function recomputeStakeButtons() {
+            const stakeableCount = userAssets.filter(a =>
+                a.ownership.frozen !== true &&
+                (!a.ownership.delegate || a.ownership.delegate === a.ownership.owner)
+            ).length;
+            const stakedCount = userAssets.filter(a => a.ownership.frozen === true).length;
+            stakeBtn.disabled = stakeableCount === 0;
+            unstakeBtn.disabled = stakedCount === 0;
+        }
+
+        // ════════════════════════════════════════════════════════
+        //   PRESERVED CORE LOGIC
+        // ════════════════════════════════════════════════════════
 
         async function loadIdlAndInitProgram() {
             const idlResp = await fetch('./capmon_staking.json');
@@ -277,26 +2154,26 @@
                     preflightCommitment: 'confirmed',
                 });
             } catch (err) {
-                log('Preflight failed:', 'err');
-                if (err.logs) {
-                    err.logs.forEach(l => log('   ' + l, 'muted'));
-                } else {
-                    log('   ' + (err.message || err), 'muted');
-                }
+                // Don't dump raw logs to terminal — friendlyError will handle.
+                console.error('[signSendConfirm] Preflight error:', err);
+                if (err.logs) console.log('[signSendConfirm] Logs:', err.logs);
                 throw err;
             }
             log('Sent. Sig: ' + signature.slice(0, 20) + '...', 'muted');
             log('Waiting for confirmation...', 'warn');
             const conf = await connection.confirmTransaction(signature, 'confirmed');
             if (conf.value.err) {
+                let onChainLogs = [];
                 try {
                     const txInfo = await connection.getTransaction(signature, { commitment: 'confirmed', maxSupportedTransactionVersion: 0 });
                     if (txInfo && txInfo.meta && txInfo.meta.logMessages) {
-                        log('On-chain logs:', 'err');
-                        txInfo.meta.logMessages.forEach(l => log('   ' + l, 'muted'));
+                        onChainLogs = txInfo.meta.logMessages;
+                        console.log('[signSendConfirm] On-chain logs:', onChainLogs);
                     }
                 } catch (e) {}
-                throw new Error('Tx failed: ' + JSON.stringify(conf.value.err));
+                const errObj = new Error('Tx failed: ' + JSON.stringify(conf.value.err));
+                errObj.logs = onChainLogs;
+                throw errObj;
             }
             return signature;
         }
@@ -304,51 +2181,63 @@
         connectBtn.addEventListener('click', async () => {
             clearLog();
             log('Connecting to Phantom...', 'warn');
-            if (!window.phantom?.solana) { log('Phantom not detected.', 'err'); return; }
+            if (!window.phantom?.solana) {
+                log('✗ Phantom wallet not detected', 'err');
+                log('   → Install Phantom from phantom.com, then refresh.', 'hint');
+                return;
+            }
             try {
                 const resp = await window.phantom.solana.connect();
                 walletPubkey = resp.publicKey;
-                log('Wallet connected', 'ok');
+                log('✓ Wallet connected', 'ok');
                 log('   ' + walletPubkey.toBase58(), 'muted');
                 const lamports = await connection.getBalance(walletPubkey);
-                log('Devnet RPC reachable, SOL balance: ' + (lamports / 1_000_000_000).toFixed(4), 'ok');
+                const sol = lamports / 1_000_000_000;
+                log('   Devnet SOL balance: ' + sol.toFixed(4), 'muted');
+                updateWalletBarUI({ solBalance: sol });
                 await loadIdlAndInitProgram();
                 testProgramBtn.disabled = false;
                 fetchCnftsBtn.disabled = false;
                 connectBtn.textContent = 'Connected';
                 connectBtn.disabled = true;
-                // Auto-fetch to populate userAssets + battle sim
                 fetchCnftsBtn.click();
             } catch (err) {
-                log('Connect failed: ' + err.message, 'err');
-                console.error(err);
+                logFriendlyError(err, 'Connect');
             }
         });
 
         testProgramBtn.addEventListener('click', async () => {
             divider();
-            log('Testing capmon-staking program on devnet...', 'warn');
+            log('Verifying capmon-staking program on devnet...', 'warn');
             try {
                 const programInfo = await connection.getAccountInfo(PROGRAM_ID);
-                if (!programInfo || !programInfo.executable) { log('Program not deployed', 'err'); return; }
-                log('Program deployed and executable', 'ok');
+                if (!programInfo || !programInfo.executable) {
+                    log('✗ Program not deployed at expected address', 'err');
+                    return;
+                }
+                log('✓ Program deployed and executable', 'ok');
                 const configInfo = await connection.getAccountInfo(PROGRAM_CONFIG_PDA);
-                if (!configInfo || !configInfo.owner.equals(PROGRAM_ID)) { log('ProgramConfig PDA bad', 'err'); return; }
-                log('ProgramConfig PDA verified', 'ok');
+                if (!configInfo || !configInfo.owner.equals(PROGRAM_ID)) {
+                    log('✗ ProgramConfig PDA invalid', 'err');
+                    return;
+                }
+                log('✓ ProgramConfig PDA verified', 'ok');
                 const authInfo = await connection.getAccountInfo(STAKE_AUTHORITY_PDA);
-                if (!authInfo || !authInfo.owner.equals(PROGRAM_ID)) { log('StakeAuthority PDA bad', 'err'); return; }
-                log('StakeAuthority PDA verified', 'ok');
+                if (!authInfo || !authInfo.owner.equals(PROGRAM_ID)) {
+                    log('✗ StakeAuthority PDA invalid', 'err');
+                    return;
+                }
+                log('✓ StakeAuthority PDA verified', 'ok');
                 divider();
-                log('Full on-chain stack validated', 'ok');
+                log('✓ Full on-chain stack validated', 'ok');
             } catch (err) {
-                log('Test failed: ' + err.message, 'err');
-                console.error(err);
+                logFriendlyError(err, 'Verify');
             }
         });
 
         fetchCnftsBtn.addEventListener('click', async () => {
             divider();
-            log('Fetching cNFTs from Helius DAS...', 'warn');
+            log('Fetching your Capmon cNFTs...', 'warn');
             try {
                 const response = await fetch(HELIUS_RPC_URL, {
                     method: 'POST',
@@ -359,58 +2248,111 @@
                     })
                 });
                 const data = await response.json();
-                if (data.error) { log('DAS error: ' + data.error.message, 'err'); return; }
+                if (data.error) {
+                    log('✗ Helius DAS error', 'err');
+                    log('   → ' + data.error.message, 'hint');
+                    return;
+                }
                 const allAssets = data.result?.items || [];
-                log('DAS returned ' + allAssets.length + ' total asset(s)', 'ok');
                 userAssets = allAssets.filter(a =>
-                    a.compression?.compressed === true && a.compression?.tree === MERKLE_TREE
+                    a.compression?.compressed === true && KNOWN_TREES.includes(a.compression?.tree)
                 );
-                log(userAssets.length + ' Capmon cNFT(s) in our merkle tree', 'ok');
-                if (userAssets.length === 0) { stakeBtn.disabled = true; unstakeBtn.disabled = true; return; }
-                divider();
-                let stakeableCount = 0, stakedCount = 0;
+                log('✓ Found ' + userAssets.length + ' Capmon cNFT(s) in your wallet', 'ok');
+                if (userAssets.length === 0) {
+                    log('   → Click Mint Capmon to get a free demo cNFT.', 'hint');
+                    stakeBtn.disabled = true;
+                    unstakeBtn.disabled = true;
+                    return;
+                }
+                let stakedCount = 0;
                 userAssets.forEach((asset, i) => {
                     const isStaked = asset.ownership.frozen === true;
                     const hasOrphanDelegate = !isStaked && asset.ownership.delegate && asset.ownership.delegate !== asset.ownership.owner;
-                    const isStakeable = !isStaked && !hasOrphanDelegate;
                     if (isStaked) stakedCount++;
-                    if (isStakeable) stakeableCount++;
-                    log('Capmon cNFT #' + (i + 1) + (isStaked ? ' (STAKED)' : (hasOrphanDelegate ? ' (post-unstake, delegate persists)' : '')), 'header');
-                    log('   Name: ' + (asset.content?.metadata?.name || '(unnamed)'), 'muted');
-                    log('   Asset ID: ' + asset.id, 'muted');
-                    log('   Leaf: ' + asset.compression.leaf_id, 'muted');
-                    if (isStaked) log('   Delegate: ' + asset.ownership.delegate.slice(0, 16) + '...', 'warn');
+                    log('   #' + (i + 1) + ' ' + asset.id.slice(0, 8) + '… ' + (isStaked ? '· STAKED' : (hasOrphanDelegate ? '· delegate cleanup pending' : '· available')), isStaked ? 'header' : 'muted');
                 });
-                stakeBtn.disabled = stakeableCount === 0;
-                unstakeBtn.disabled = stakedCount === 0;
+                if (stakedCount > 0) {
+                    log('   → ' + stakedCount + ' staked, ' + (userAssets.length - stakedCount) + ' available.', 'hint');
+                }
+                recomputeStakeButtons();
                 await refreshBattleSim();
             } catch (err) {
-                log('Fetch failed: ' + err.message, 'err');
-                console.error(err);
+                logFriendlyError(err, 'Refresh NFTs');
             }
         });
 
+        // ════════════════════════════════════════════════════════
+        //   STAKE — with on-chain pre-check + auto-enable unstake
+        // ════════════════════════════════════════════════════════
         stakeBtn.addEventListener('click', async () => {
-            if (!program) { log('Program not initialized', 'err'); return; }
-            const asset = userAssets.find(a => a.ownership.frozen !== true && (!a.ownership.delegate || a.ownership.delegate === a.ownership.owner));
-            if (!asset) { log('No unstaked cNFTs', 'err'); return; }
+            if (!program) {
+                log('✗ Program not initialized', 'err');
+                log('   → Click Connect Phantom first.', 'hint');
+                return;
+            }
+
+            const asset = userAssets.find(a =>
+                a.ownership.frozen !== true &&
+                (!a.ownership.delegate || a.ownership.delegate === a.ownership.owner)
+            );
+
+            if (!asset) {
+                const stakedCount = userAssets.filter(a => a.ownership.frozen === true).length;
+                const orphanCount = userAssets.filter(a =>
+                    a.ownership.frozen !== true &&
+                    a.ownership.delegate &&
+                    a.ownership.delegate !== a.ownership.owner
+                ).length;
+                divider();
+                if (stakedCount > 0 && orphanCount === 0) {
+                    log('✗ All your NFTs are already staked', 'err');
+                    log('   → Use the Unstake button to release one first.', 'hint');
+                } else if (orphanCount > 0) {
+                    log('✗ NFT has a leftover delegate from a recent unstake', 'err');
+                    log('   → Wait ~10s for indexer sync, click Refresh My NFTs, then try again.', 'hint');
+                } else {
+                    log('✗ No Capmon NFTs in your wallet yet', 'err');
+                    log('   → Click Mint Capmon for a free demo cNFT first.', 'hint');
+                }
+                return;
+            }
+
             const tier = parseInt(tierSelect.value);
             divider();
-            log('Staking ' + asset.id.slice(0, 8) + '... at tier ' + tier, 'warn');
-            try {
-                log('Fetching asset and merkle proof...', 'muted');
-                const { fullAsset, proof } = await fetchAssetAndProof(asset.id);
-                log('   Proof depth: ' + proof.proof.length, 'muted');
+            log('Staking ' + asset.id.slice(0, 8) + '… as ' + TIER_NAMES[tier] + ' (tier ' + tier + ')', 'warn');
 
+            try {
+                log('Fetching merkle proof from Helius...', 'muted');
+                const { fullAsset, proof } = await fetchAssetAndProof(asset.id);
+
+                const merkleTree = new PublicKey(asset.compression.tree);
+                const nftAssetId = new PublicKey(asset.id);
+                const { stakeAuthority, stakeRecord, treeConfig } = buildPDAs(merkleTree, nftAssetId);
+
+                // ── PRE-CHECK: does the StakeRecord PDA already exist? ──
+                // If yes, this NFT is staked but our local userAssets thinks otherwise
+                // (e.g., DAS reindex lag after a previous stake). Catch it before
+                // Phantom pops and the on-chain "Allocate already in use" error fires.
+                try {
+                    await program.account.stakeRecord.fetch(stakeRecord);
+                    log('✗ This NFT is already staked on-chain', 'err');
+                    log('   → Use the Unstake button below to release it first.', 'hint');
+                    asset.ownership.frozen = true;
+                    asset.ownership.delegate = stakeAuthority.toBase58();
+                    recomputeStakeButtons();
+                    updateBattleUI();
+                    return;
+                } catch (e) {
+                    // PDA not found = safe to stake, continue.
+                }
+
+                log('   Proof depth: ' + proof.proof.length, 'muted');
                 const rootBytes = Array.from(new PublicKey(proof.root).toBytes());
                 const dataHashBytes = Array.from(new PublicKey(fullAsset.compression.data_hash).toBytes());
                 const creatorHashBytes = Array.from(new PublicKey(fullAsset.compression.creator_hash).toBytes());
-                const merkleTree = new PublicKey(asset.compression.tree);
-                const nftAssetId = new PublicKey(asset.id);
                 const leafId = asset.compression.leaf_id;
 
-                const { stakeAuthority, stakeRecord, treeConfig } = buildPDAs(merkleTree, nftAssetId);
-                log('   StakeRecord: ' + stakeRecord.toBase58().slice(0, 16) + '...', 'muted');
+                log('   StakeRecord PDA: ' + stakeRecord.toBase58().slice(0, 16) + '...', 'muted');
 
                 const remainingAccounts = proof.proof.map(node => ({
                     pubkey: new PublicKey(node), isWritable: false, isSigner: false,
@@ -429,31 +2371,44 @@
                 }).remainingAccounts(remainingAccounts).instruction();
 
                 const sig = await signSendConfirm([ix]);
-                log('Staked!', 'ok');
-                log('   Explorer: https://explorer.solana.com/tx/' + sig + '?cluster=devnet', 'muted');
+                log('✓ Staked successfully!', 'ok');
+                log('   tx: explorer.solana.com/tx/' + sig.slice(0, 20) + '...', 'muted');
 
-                log('Verifying StakeRecord on-chain...', 'muted');
                 const record = await program.account.stakeRecord.fetch(stakeRecord);
-                log('   tier: ' + record.tier + ' · brain_steps: ' + record.brainSteps, 'muted');
-                log('Stake verified', 'ok');
-                // Set activeStake immediately from on-chain truth (don't wait for DAS reindex)
+                log('   Tier: ' + TIER_NAMES[record.tier] + ' · Brain: ' + record.brainSteps + ' steps', 'muted');
+                log('✓ Capbot is now active — earning Cap Coins on-chain', 'ok');
+
+                // Update local state immediately — no DAS reindex wait.
                 activeStake = { assetId: asset.id, tier: record.tier, brainSteps: record.brainSteps };
+                asset.ownership.frozen = true;
+                asset.ownership.delegate = stakeAuthority.toBase58();
+                recomputeStakeButtons();
                 updateBattleUI();
             } catch (err) {
-                log('Stake failed: ' + err.message, 'err');
-                if (err.logs) err.logs.forEach(l => log('   ' + l, 'muted'));
-                console.error(err);
+                logFriendlyError(err, 'Stake');
             }
         });
 
+        // ════════════════════════════════════════════════════════
+        //   UNSTAKE
+        // ════════════════════════════════════════════════════════
         unstakeBtn.addEventListener('click', async () => {
-            if (!program) { log('Program not initialized', 'err'); return; }
+            if (!program) {
+                log('✗ Program not initialized', 'err');
+                log('   → Click Connect Phantom first.', 'hint');
+                return;
+            }
             const asset = userAssets.find(a => a.ownership.frozen === true);
-            if (!asset) { log('No staked cNFTs to unstake', 'err'); return; }
+            if (!asset) {
+                divider();
+                log('✗ No staked NFT to unstake', 'err');
+                log('   → Stake an NFT first using the Stake button above.', 'hint');
+                return;
+            }
             divider();
-            log('Unstaking ' + asset.id.slice(0, 8) + '...', 'warn');
+            log('Unstaking ' + asset.id.slice(0, 8) + '…', 'warn');
             try {
-                log('Fetching asset and merkle proof...', 'muted');
+                log('Fetching merkle proof from Helius...', 'muted');
                 const { fullAsset, proof } = await fetchAssetAndProof(asset.id);
                 log('   Proof depth: ' + proof.proof.length, 'muted');
 
@@ -474,7 +2429,6 @@
                 const assetDataHashBytes = Array.from(new PublicKey(fullAsset.compression.asset_data_hash).toBytes());
                 const collectionHashBytes = Array.from(new PublicKey(fullAsset.compression.collection_hash).toBytes());
                 const flags = fullAsset.compression.flags;
-                log('   asset_data_hash: ' + fullAsset.compression.asset_data_hash.slice(0, 16) + '... · flags: ' + flags, 'muted');
 
                 const params = {
                     root: rootBytes, dataHash: dataHashBytes, creatorHash: creatorHashBytes,
@@ -491,25 +2445,35 @@
                 }).remainingAccounts(remainingAccounts).instruction();
 
                 const sig = await signSendConfirm([ix]);
-                log('Unstaked!', 'ok');
-                log('   Explorer: https://explorer.solana.com/tx/' + sig + '?cluster=devnet', 'muted');
-                log('   StakeRecord PDA closed, rent refunded', 'muted');
-                // Clear activeStake immediately if this was the active one
+                log('✓ Unstaked successfully', 'ok');
+                log('   tx: explorer.solana.com/tx/' + sig.slice(0, 20) + '...', 'muted');
+                log('   StakeRecord PDA closed, rent refunded to your wallet', 'muted');
+
                 if (activeStake && activeStake.assetId === asset.id) {
                     activeStake = null;
-                    updateBattleUI();
                 }
-                log('Refreshing cNFT list...', 'muted');
+                asset.ownership.frozen = false;
+                // Note: delegate persists post-unstake until DAS reindex.
+                recomputeStakeButtons();
+                updateBattleUI();
+
+                log('Refreshing NFT list...', 'muted');
                 fetchCnftsBtn.click();
             } catch (err) {
-                log('Unstake failed: ' + err.message, 'err');
-                if (err.logs) err.logs.forEach(l => log('   ' + l, 'muted'));
-                console.error(err);
+                logFriendlyError(err, 'Unstake');
             }
         });
 
+        // ════════════════════════════════════════════════════════
+        //   MINT
+        // ════════════════════════════════════════════════════════
         mintBtn.addEventListener('click', async () => {
-            if (!walletPubkey) { log('Connect Phantom first', 'err'); return; }
+            if (!walletPubkey) {
+                divider();
+                log('✗ Connect Phantom first', 'err');
+                log('   → Click Connect Phantom at the top, then come back here.', 'hint');
+                return;
+            }
             divider();
             log('Minting demo cNFT to your wallet...', 'warn');
             log('   (first call cold-starts ~20s; subsequent calls ~3s)', 'muted');
@@ -522,33 +2486,35 @@
                 });
                 const data = await response.json();
                 if (!response.ok) {
-                    log('Mint failed: ' + (data.error || 'Unknown'), 'err');
-                    if (data.details) log('   ' + data.details, 'muted');
+                    log('✗ Mint failed', 'err');
+                    log('   → ' + (data.error || 'Server error') + '. Try again in a moment.', 'hint');
+                    console.error('[Mint] Server response:', data);
                     return;
                 }
-                log('Minted!', 'ok');
-                log('   Asset ID: ' + data.assetId, 'muted');
-                log('   Leaf index: ' + data.leafIndex, 'muted');
-                log('   Explorer: ' + data.explorer, 'muted');
-                log('Refreshing cNFT list...', 'muted');
+                log('✓ Minted!', 'ok');
+                log('   Asset ID: ' + data.assetId.slice(0, 16) + '...', 'muted');
+                log('   Leaf: ' + data.leafIndex, 'muted');
+                log('Refreshing NFT list...', 'muted');
                 fetchCnftsBtn.click();
             } catch (err) {
-                log('Mint failed: ' + err.message, 'err');
-                console.error(err);
+                logFriendlyError(err, 'Mint');
             } finally {
                 mintBtn.disabled = false;
             }
         });
 
+        // ════════════════════════════════════════════════════════
+        //   BATTLE SIM
+        // ════════════════════════════════════════════════════════
         function updateBattleUI() {
             capCoinsEl.textContent = capCoins.toLocaleString();
             if (activeStake) {
-                const brainM = (Number(activeStake.brainSteps) / 1_000_000).toFixed(0);
-                activeCapmonEl.textContent = TIER_NAMES[activeStake.tier] + ' · ' + activeStake.assetId.slice(0, 8) + '... · ' + brainM + 'M brain';
+                const brainM = (Number(activeStake.brainSteps) / 1_000_000).toFixed(1);
+                activeCapmonEl.textContent = TIER_NAMES[activeStake.tier] + ' · ' + activeStake.assetId.slice(0, 6) + '… · ' + brainM + 'M brain';
                 activeMultiplierEl.textContent = TIER_MULTIPLIERS[activeStake.tier].toFixed(1) + '×';
             } else {
-                activeCapmonEl.textContent = 'None — stake to activate tier multiplier';
-                activeMultiplierEl.textContent = '1.0× (no NFT staked)';
+                activeCapmonEl.textContent = 'None — stake to activate';
+                activeMultiplierEl.textContent = '1.0×';
             }
             winCountEl.textContent = wins;
             lossCountEl.textContent = losses;
@@ -556,6 +2522,7 @@
             netEarnedEl.textContent = (net >= 0 ? '+' : '') + net.toLocaleString();
             netEarnedEl.className = net > 0 ? 'net-positive' : (net < 0 ? 'net-negative' : '');
             battleBtn.disabled = capCoins < BATTLE_BET;
+            updateCapbotStatusPanel();
         }
 
         async function findActiveStake() {
@@ -594,15 +2561,124 @@
                 capCoins += BATTLE_BET + winnings;
                 wins++;
                 const tierBadge = activeStake ? ' (' + multiplier.toFixed(1) + '× ' + TIER_NAMES[activeStake.tier] + ' multiplier)' : '';
-                log('Battle WIN! +' + winnings.toLocaleString() + ' Cap Coins' + tierBadge, 'ok');
+                log('✓ Battle WIN! +' + winnings.toLocaleString() + ' Cap Coins' + tierBadge, 'ok');
             } else {
                 losses++;
-                log('Battle LOSS. -' + BATTLE_BET.toLocaleString() + ' Cap Coins', 'err');
+                log('✗ Battle LOSS. -' + BATTLE_BET.toLocaleString() + ' Cap Coins', 'err');
             }
             updateBattleUI();
         });
 
         updateBattleUI();
+
+// ════════════════════════════════════════════════════════
+        //   BLINK SECTION — consumes our own actionMintStake endpoint
+        //   Renders the same Solana Action metadata any Blink client
+        //   would render, executes the returned tx via Phantom.
+        // ════════════════════════════════════════════════════════
+        const BLINK_BASE_URL = 'https://capmon-hackathon.web.app/actionMintStake?tier=';
+
+        async function loadBlinkMetadata(tier) {
+            try {
+                const resp = await fetch(BLINK_BASE_URL + tier, { method: 'GET' });
+                if (!resp.ok) throw new Error('GET ' + resp.status);
+                const data = await resp.json();
+                const imgEl = document.getElementById('blinkImage' + tier);
+                const titleEl = document.getElementById('blinkTitle' + tier);
+                const descEl = document.getElementById('blinkDesc' + tier);
+                const btn = document.querySelector('.blink-card-button[data-tier="' + tier + '"]');
+                if (data.icon)        imgEl.style.backgroundImage = 'url("' + data.icon + '")';
+                if (data.title)       titleEl.textContent = data.title;
+                if (data.description) descEl.textContent  = data.description;
+                if (btn) {
+                    btn.textContent = '⚡ ' + (data.label || 'Mint + Stake');
+                    btn.disabled = false;
+                }
+            } catch (err) {
+                console.error('[Blink] tier ' + tier + ' GET failed:', err);
+                document.getElementById('blinkTitle' + tier).textContent = 'Endpoint offline';
+                document.getElementById('blinkDesc' + tier).textContent = 'Could not fetch Blink metadata. Check console.';
+            }
+        }
+
+        async function executeBlinkMint(tier) {
+            divider();
+            if (!walletPubkey) {
+                log('✗ Connect Phantom first to use Blinks', 'err');
+                log('   → Click Connect Phantom at the top, then come back.', 'hint');
+                return;
+            }
+            const btn = document.querySelector('.blink-card-button[data-tier="' + tier + '"]');
+            const originalLabel = btn ? btn.textContent : '';
+            if (btn) { btn.disabled = true; btn.textContent = 'Working…'; }
+
+            const tierName = TIER_NAMES[tier];
+            log('⚡ Blink → Mint + Stake ' + tierName + ' (tier ' + tier + ')', 'warn');
+
+            try {
+                log('   POST ' + BLINK_BASE_URL + tier, 'muted');
+                const resp = await fetch(BLINK_BASE_URL + tier, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ account: walletPubkey.toBase58() }),
+                });
+                if (!resp.ok) {
+                    const errBody = await resp.json().catch(() => ({}));
+                    throw new Error(errBody.error || ('Server returned ' + resp.status));
+                }
+                const data = await resp.json();
+                log('   ✓ Server returned partially-signed tx', 'muted');
+                if (data.message) log('   "' + data.message + '"', 'muted');
+
+                // Decode base64 → bytes → VersionedTransaction
+                const txBytes = Uint8Array.from(atob(data.transaction), c => c.charCodeAt(0));
+                let tx;
+                try {
+                    tx = VersionedTransaction.deserialize(txBytes);
+                } catch (e) {
+                    tx = Transaction.from(txBytes);
+                }
+
+                log('   Signing with Phantom (atomic mint + stake)...', 'warn');
+                const signed = await window.phantom.solana.signTransaction(tx);
+
+                log('   Submitting to devnet...', 'warn');
+                const rawTx = signed.serialize();
+                const sig = await connection.sendRawTransaction(rawTx, {
+                    skipPreflight: false,
+                    preflightCommitment: 'confirmed',
+                });
+                log('   Sent. Sig: ' + sig.slice(0, 20) + '...', 'muted');
+                log('   Waiting for confirmation...', 'warn');
+
+                const conf = await connection.confirmTransaction(sig, 'confirmed');
+                if (conf.value.err) {
+                    throw new Error('Tx failed on-chain: ' + JSON.stringify(conf.value.err));
+                }
+
+                log('✓ Blink complete — minted AND staked atomically!', 'ok');
+                log('   tx: explorer.solana.com/tx/' + sig.slice(0, 20) + '...', 'muted');
+                log('   Your Capbot is now active.', 'ok');
+
+                // Refresh the wallet's NFT list (gives DAS ~3s to reindex)
+                if (fetchCnftsBtn && !fetchCnftsBtn.disabled) {
+                    log('   Refreshing your wallet in 3s...', 'muted');
+                    setTimeout(() => fetchCnftsBtn.click(), 3000);
+                }
+            } catch (err) {
+                logFriendlyError(err, 'Blink Mint+Stake');
+            } finally {
+                if (btn) { btn.disabled = false; btn.textContent = originalLabel; }
+            }
+        }
+
+        // Wire up Blink buttons
+        document.querySelectorAll('.blink-card-button').forEach(btn => {
+            btn.addEventListener('click', () => executeBlinkMint(Number(btn.dataset.tier)));
+        });
+
+        // Fetch Blink metadata for all 4 tiers on page load
+        [0, 1, 2, 3].forEach(t => loadBlinkMetadata(t));
 
         resetBtn.addEventListener('click', () => {
             walletPubkey = null;
@@ -613,6 +2689,8 @@
             losses = 0;
             activeStake = null;
             updateBattleUI();
+            updateWalletBarUI();
+            selectTierCard(0); // reset chamber + lite to Evergreen
             connectBtn.textContent = 'Connect Phantom';
             connectBtn.disabled = false;
             testProgramBtn.disabled = true;
@@ -622,6 +2700,355 @@
             clearLog();
             log('Ready. Click "Connect Phantom" to begin.');
         });
+
+        // ════════════════════════════════════════════════════════
+        //   CHAMBER TIER PARTICLES
+        //   Adapted verbatim from capmon.fun/builder marketing source.
+        //   Renames: tier1..4 → chamber-tier1..4
+        //            .elementor-button → .chamber-button
+        //   Scales: MARGIN reduced from 180 → 130 to match smaller chambers.
+        // ════════════════════════════════════════════════════════
+        (function chamberParticles() {
+            const TIERS = ['chamber-tier1', 'chamber-tier2', 'chamber-tier3', 'chamber-tier4'];
+
+            const isMobileDevice = window.innerWidth <= 767;
+            TIERS.forEach(tier => {
+                const button = document.querySelector(`#${tier} .chamber-button`);
+                if (!button) return;
+                let el = button.parentElement;
+                while (el && el !== document.documentElement) {
+                    if (isMobileDevice && (el === document.body || el.tagName === 'HTML')) {
+                        el = el.parentElement;
+                        continue;
+                    }
+                    el.style.setProperty('overflow', 'visible', 'important');
+                    el = el.parentElement;
+                }
+            });
+
+            const IMAGE_URLS = {
+                'chamber-tier1': ['https://capmon.fun/wp-content/uploads/2026/02/grass-scaled.png'],
+                'chamber-tier2': ['https://capmon.fun/wp-content/uploads/2026/02/waterdropp.png'],
+                'chamber-tier3': ['https://capmon.fun/wp-content/uploads/2026/02/fiure-1.png'],
+                'chamber-tier4': [
+                    'https://capmon.fun/wp-content/uploads/2026/02/grass-scaled.png',
+                    'https://capmon.fun/wp-content/uploads/2026/02/waterdropp.png',
+                    'https://capmon.fun/wp-content/uploads/2026/02/fiure-1.png'
+                ]
+            };
+
+            const loadedImages = {};
+            [...new Set(Object.values(IMAGE_URLS).flat())].forEach(url => {
+                const img = new Image();
+                img.src = url;
+                loadedImages[url] = img;
+            });
+
+            const MARGIN = 130;
+            const tierData = {};
+
+            TIERS.forEach(tier => {
+                const widget = document.querySelector(`#${tier}`);
+                const button = document.querySelector(`#${tier} .chamber-button`);
+                if (!widget || !button) return;
+
+                const depth = document.createElement('div');
+                depth.className = 'box-depth';
+                button.appendChild(depth);
+
+                const shell = document.createElement('div');
+                shell.className = 'box-shell';
+                widget.appendChild(shell);
+
+                function positionShell() {
+                    const wRect = widget.getBoundingClientRect();
+                    const bRect = button.getBoundingClientRect();
+                    const ow = button.offsetWidth;
+                    const oh = button.offsetHeight;
+                    const leftAdj = (bRect.width  - ow) / 2;
+                    const topAdj  = (bRect.height - oh) / 2;
+                    shell.style.cssText =
+                        `left:${bRect.left - wRect.left + leftAdj}px;` +
+                        `top:${bRect.top  - wRect.top  + topAdj}px;`  +
+                        `width:${ow}px;`                               +
+                        `height:${oh}px;`;
+                }
+                positionShell();
+                requestAnimationFrame(positionShell);
+
+                let resizeTimer;
+                window.addEventListener('resize', () => {
+                    clearTimeout(resizeTimer);
+                    resizeTimer = setTimeout(() => {
+                        positionShell();
+                        updateCanvasSize(tier);
+                    }, 100);
+                });
+
+                ['top', 'bottom', 'left', 'right'].forEach(side => {
+                    const wall = document.createElement('div');
+                    wall.className = `box-wall box-wall-${side}`;
+                    shell.appendChild(wall);
+                });
+
+                ['tl', 'tr', 'bl', 'br'].forEach(corner => {
+                    const wall = document.createElement('div');
+                    wall.className = `box-wall box-wall-corner box-wall-corner-${corner}`;
+                    shell.appendChild(wall);
+                });
+
+                const canvas = document.createElement('canvas');
+                canvas.className = 'particle-canvas';
+                button.appendChild(canvas);
+
+                const dpr = window.devicePixelRatio || 1;
+                const bw  = button.offsetWidth;
+                const bh  = button.offsetHeight;
+                const cw  = bw + MARGIN * 2;
+                const ch  = bh + MARGIN * 2;
+
+                canvas.width  = cw * dpr;
+                canvas.height = ch * dpr;
+                canvas.style.width  = cw + 'px';
+                canvas.style.height = ch + 'px';
+
+                const ctx = canvas.getContext('2d');
+                ctx.scale(dpr, dpr);
+
+                tierData[tier] = { canvas, ctx, bw, bh, cw, ch, dpr };
+            });
+
+            function updateCanvasSize(tier) {
+                const d = tierData[tier];
+                if (!d) return;
+                const button = document.querySelector(`#${tier} .chamber-button`);
+                if (!button) return;
+                const bw = button.offsetWidth;
+                const bh = button.offsetHeight;
+                const cw = bw + MARGIN * 2;
+                const ch = bh + MARGIN * 2;
+                d.bw = bw; d.bh = bh; d.cw = cw; d.ch = ch;
+                d.canvas.width  = cw * d.dpr;
+                d.canvas.height = ch * d.dpr;
+                d.canvas.style.width  = cw + 'px';
+                d.canvas.style.height = ch + 'px';
+                d.ctx.scale(d.dpr, d.dpr);
+            }
+
+            const MAX_PARTICLES = 160;
+            let allParticles = [];
+            let rafId = null;
+
+            function runRAF(now) {
+                if (allParticles.length === 0) {
+                    TIERS.forEach(t => {
+                        const d = tierData[t];
+                        if (d) d.ctx.clearRect(0, 0, d.cw, d.ch);
+                    });
+                    rafId = null;
+                    return;
+                }
+
+                const activeTiers = new Set();
+                allParticles.forEach(p => activeTiers.add(p.tier));
+                activeTiers.forEach(t => {
+                    const d = tierData[t];
+                    if (d) d.ctx.clearRect(0, 0, d.cw, d.ch);
+                });
+
+                allParticles = allParticles.filter(p => {
+                    const elapsed = now - p.startTime;
+                    if (elapsed >= p.life) return false;
+
+                    const progress = elapsed / p.life;
+                    const x = p.spawnX + p.vx * (elapsed / 1000);
+                    const y = p.spawnY + p.vy * (elapsed / 1000);
+
+                    const opacity = progress < 0.1
+                        ? progress / 0.1
+                        : 1 - ((progress - 0.1) / 0.9) * 0.98;
+
+                    const scale = 0.08 + Math.pow(progress, 0.65) * p.scaleMult;
+                    const size  = 38 * scale;
+                    const rotation = p.rotSpeed * (elapsed / 16) * (Math.PI / 180);
+
+                    if (!p.img.complete || p.img.naturalWidth === 0) return true;
+
+                    const ctx = p.ctx;
+                    ctx.save();
+                    ctx.globalAlpha = Math.max(0, Math.min(1, opacity));
+                    ctx.translate(x, y);
+                    ctx.rotate(rotation);
+                    ctx.drawImage(p.img, -size * 0.5, -size * 0.5, size, size);
+                    ctx.restore();
+
+                    return true;
+                });
+
+                rafId = requestAnimationFrame(runRAF);
+            }
+
+            function pushParticle(tier, spawnX, spawnY, angle, speedMult, scaleMult, life) {
+                if (allParticles.length >= MAX_PARTICLES) return;
+                const d = tierData[tier];
+                if (!d) return;
+
+                const urls = IMAGE_URLS[tier];
+                const img  = loadedImages[urls[Math.floor(Math.random() * urls.length)]];
+                const speed = (38 + Math.random() * 45) * speedMult;
+
+                allParticles.push({
+                    tier,
+                    ctx:       d.ctx,
+                    img,
+                    spawnX, spawnY,
+                    vx:        Math.cos(angle) * speed,
+                    vy:        Math.sin(angle) * speed,
+                    rotSpeed:  (Math.random() - 0.5) * 19,
+                    life,
+                    scaleMult,
+                    startTime: performance.now()
+                });
+
+                if (!rafId) rafId = requestAnimationFrame(runRAF);
+            }
+
+            function spawnParticle(tier, speedMult = 1.0, scaleMult = 1.5, life = 1100) {
+                const d = tierData[tier];
+                if (!d) return;
+
+                const { bw, bh } = d;
+                const b  = 2;
+                const br = 22;
+                const side = Math.floor(Math.random() * 4);
+                let spawnX, spawnY, angle;
+
+                if (side === 0) {
+                    spawnX = MARGIN + br + Math.random() * (bw - br * 2);
+                    spawnY = MARGIN + b;
+                    angle  = Math.PI * 1.5 + (Math.random() - 0.5) * 1.2;
+                } else if (side === 1) {
+                    spawnX = MARGIN + bw - b;
+                    spawnY = MARGIN + br + Math.random() * (bh - br * 2);
+                    angle  = (Math.random() - 0.5) * 1.2;
+                } else if (side === 2) {
+                    spawnX = MARGIN + br + Math.random() * (bw - br * 2);
+                    spawnY = MARGIN + bh - b;
+                    angle  = Math.PI * 0.5 + (Math.random() - 0.5) * 1.2;
+                } else {
+                    spawnX = MARGIN + b;
+                    spawnY = MARGIN + br + Math.random() * (bh - br * 2);
+                    angle  = Math.PI + (Math.random() - 0.5) * 1.2;
+                }
+
+                pushParticle(tier, spawnX, spawnY, angle, speedMult, scaleMult, life);
+            }
+
+            function buildBurstPositions(tier, total) {
+                const d = tierData[tier];
+                if (!d) return [];
+
+                const { bw, bh } = d;
+                const b  = 2;
+                const br = 22;
+
+                const topLen    = bw - br * 2;
+                const rightLen  = bh - br * 2;
+                const bottomLen = bw - br * 2;
+                const leftLen   = bh - br * 2;
+                const perimeter = topLen + rightLen + bottomLen + leftLen;
+                const step      = perimeter / total;
+
+                const positions = [];
+                for (let i = 0; i < total; i++) {
+                    let pos = (i + 0.5) * step;
+                    let spawnX, spawnY, angle;
+
+                    if (pos < topLen) {
+                        spawnX = MARGIN + br + pos;
+                        spawnY = MARGIN + b;
+                        angle  = Math.PI * 1.5 + (Math.random() - 0.5) * 0.9;
+                    } else if (pos < topLen + rightLen) {
+                        pos -= topLen;
+                        spawnX = MARGIN + bw - b;
+                        spawnY = MARGIN + br + pos;
+                        angle  = (Math.random() - 0.5) * 0.9;
+                    } else if (pos < topLen + rightLen + bottomLen) {
+                        pos -= topLen + rightLen;
+                        spawnX = MARGIN + bw - br - pos;
+                        spawnY = MARGIN + bh - b;
+                        angle  = Math.PI * 0.5 + (Math.random() - 0.5) * 0.9;
+                    } else {
+                        pos -= topLen + rightLen + bottomLen;
+                        spawnX = MARGIN + b;
+                        spawnY = MARGIN + bh - br - pos;
+                        angle  = Math.PI + (Math.random() - 0.5) * 0.9;
+                    }
+                    positions.push({ spawnX, spawnY, angle });
+                }
+
+                for (let i = positions.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [positions[i], positions[j]] = [positions[j], positions[i]];
+                }
+                return positions;
+            }
+
+            const hoverTimers = { 'chamber-tier1': null, 'chamber-tier2': null, 'chamber-tier3': null, 'chamber-tier4': null };
+
+            TIERS.forEach(tier => {
+                const button = document.querySelector(`#${tier} .chamber-button`);
+                if (!button) return;
+
+                const isTier4    = tier === 'chamber-tier4';
+                const burstEvent = 'mousedown';
+
+                button.addEventListener('mouseenter', () => {
+                    clearInterval(hoverTimers[tier]);
+                    if (isTier4) {
+                        hoverTimers[tier] = setInterval(() => {
+                            spawnParticle(tier);
+                            spawnParticle(tier);
+                            if (Math.random() > 0.25) spawnParticle(tier);
+                            if (Math.random() > 0.55) spawnParticle(tier);
+                        }, 45);
+                    } else {
+                        hoverTimers[tier] = setInterval(() => {
+                            spawnParticle(tier);
+                            if (Math.random() > 0.30) spawnParticle(tier);
+                            if (Math.random() > 0.65) spawnParticle(tier);
+                        }, 70);
+                    }
+                });
+
+                button.addEventListener('mouseleave', () => {
+                    clearInterval(hoverTimers[tier]);
+                    hoverTimers[tier] = null;
+                });
+
+                button.addEventListener(burstEvent, () => {
+                    if (isTier4) {
+                        const total     = 160;
+                        const positions = buildBurstPositions(tier, total);
+                        positions.forEach((p, i) => {
+                            setTimeout(() => pushParticle(
+                                tier, p.spawnX, p.spawnY, p.angle,
+                                1.5 + Math.random() * 0.5, 1.9, 1400
+                            ), i * 3);
+                        });
+                    } else {
+                        const total     = 110;
+                        const positions = buildBurstPositions(tier, total);
+                        positions.forEach((p, i) => {
+                            setTimeout(() => pushParticle(
+                                tier, p.spawnX, p.spawnY, p.angle,
+                                1.3, 1.6, 1200
+                            ), i * 5);
+                        });
+                    }
+                });
+            });
+        })();
     </script>
 </body>
 </html>
