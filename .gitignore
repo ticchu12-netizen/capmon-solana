@@ -32,3 +32,4 @@ test-ledger/
 .vscode/
 .idea/
 *.swp
+*:Zone.Identifier

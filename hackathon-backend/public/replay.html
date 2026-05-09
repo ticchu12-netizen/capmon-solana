@@ -12,7 +12,10 @@
 * { box-sizing: border-box; }
 
 body {
-    background: radial-gradient(ellipse at top, #1a0a2e 0%, #0a0e1a 60%);
+    background:
+        radial-gradient(ellipse 900px 600px at 100% 100%, rgba(20, 241, 149, 0.06) 0%, transparent 55%),
+        radial-gradient(ellipse 900px 600px at 0% 100%, rgba(153, 69, 255, 0.07) 0%, transparent 55%),
+        radial-gradient(ellipse at top, #1a0a2e 0%, #0a0e1a 60%);
     background-attachment: fixed;
     color: #e0e0e8;
     font-family: 'JetBrains Mono', monospace;
@@ -21,7 +24,19 @@ body {
     min-height: 100vh;
 }
 
-.container { max-width: 1100px; margin: 0 auto; }
+.solana-watermark {
+    position: fixed;
+    top: 30px;
+    right: 30px;
+    width: 70px;
+    opacity: 0.14;
+    pointer-events: none;
+    z-index: 0;
+    transition: opacity 0.3s;
+}
+.solana-watermark:hover { opacity: 0.3; }
+
+.container { max-width: 1100px; margin: 0 auto; position: relative; z-index: 1; }
 
 .hero { text-align: center; padding: 20px 0 10px; }
 
@@ -300,6 +315,29 @@ h1 {
     margin-top: 6px;
 }
 
+.outcome .burn-beat {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(255,215,0,0.2);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    text-align: center;
+}
+.outcome .burn-beat .brain-up { color: #ffd700; }
+.outcome .burn-beat .burn-tag { color: #e63d00; margin-left: 14px; }
+.outcome .burn-beat .tx-link { color: #00f0ff; margin-left: 14px; }
+.outcome .burn-beat .tx-link a { color: #00f0ff; text-decoration: none; border-bottom: 1px dotted #00f0ff; }
+
+@media (max-width: 600px) {
+    .outcome .burn-beat .brain-up,
+    .outcome .burn-beat .burn-tag,
+    .outcome .burn-beat .tx-link {
+        display: block;
+        margin: 4px 0;
+    }
+}
+
 /* ============ move log ============ */
 .move-log {
     background: rgba(15, 19, 37, 0.5);
@@ -430,9 +468,49 @@ h1 {
 }
 
 .footer a:hover { color: #00f0ff; border-bottom-color: #00f0ff; }
+
+.solana-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 14px;
+    background: linear-gradient(135deg, rgba(153, 69, 255, 0.1), rgba(20, 241, 149, 0.1));
+    border: 1px solid rgba(153, 69, 255, 0.3);
+    border-radius: 20px;
+    font-size: 0.7rem;
+    color: #c0c0c8;
+    margin-top: 16px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+.solana-badge svg { flex-shrink: 0; }
+.solana-badge .label {
+    background: linear-gradient(90deg, #9945FF, #14F195);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 600;
+}
+
+@media (max-width: 600px) {
+    .solana-watermark { width: 50px; top: 15px; right: 15px; opacity: 0.1; }
+}
 </style>
 </head>
 <body>
+
+<svg class="solana-watermark" viewBox="0 0 100 80" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <defs>
+        <linearGradient id="solWmGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#9945FF"/>
+            <stop offset="100%" stop-color="#14F195"/>
+        </linearGradient>
+    </defs>
+    <path d="M15 12 L92 12 L80 24 L3 24 Z" fill="url(#solWmGrad)"/>
+    <path d="M3 35 L80 35 L92 47 L15 47 Z" fill="url(#solWmGrad)"/>
+    <path d="M15 58 L92 58 L80 70 L3 70 Z" fill="url(#solWmGrad)"/>
+</svg>
+
 <div class="container">
 
 <div class="hero">
@@ -451,6 +529,20 @@ h1 {
         <a href="/replay">All Replays</a> ·
         <a href="https://github.com/ticchu12-netizen/capmon-solana">GitHub</a>
     </p>
+    <span class="solana-badge">
+        <svg width="14" height="11" viewBox="0 0 100 80" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <linearGradient id="solBadgeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#9945FF"/>
+                    <stop offset="100%" stop-color="#14F195"/>
+                </linearGradient>
+            </defs>
+            <path d="M15 12 L92 12 L80 24 L3 24 Z" fill="url(#solBadgeGrad)"/>
+            <path d="M3 35 L80 35 L92 47 L15 47 Z" fill="url(#solBadgeGrad)"/>
+            <path d="M15 58 L92 58 L80 70 L3 70 Z" fill="url(#solBadgeGrad)"/>
+        </svg>
+        <span class="label">Built on Solana</span>
+    </span>
 </div>
 
 </div>
@@ -731,10 +823,27 @@ function setHp(who, current, max) {
 function showOutcome() {
     const r = replayData;
     const isWin = r.result === 'win';
+
+    let burnBeat = '';
+    if (r.brainUpgrade) {
+        const bu = r.brainUpgrade;
+        const txLink = bu.txSignature
+            ? `<span class="tx-link"><a href="https://solana.fm/tx/${bu.txSignature}?cluster=devnet-solana" target="_blank" rel="noopener">tx ${bu.txSignature.slice(0,8)}…↗</a></span>`
+            : '';
+        burnBeat = `
+            <div class="burn-beat">
+                <span class="brain-up">🧠 Brain ${fmtNum(bu.oldBrainSteps)} → ${fmtNum(bu.newBrainSteps)}</span>
+                <span class="burn-tag">🔥 −${fmtNum(bu.coinsBurned || 0)} burned</span>
+                ${txLink}
+            </div>
+        `;
+    }
+
     document.getElementById('outcomeArea').innerHTML = `
         <div class="outcome ${isWin ? 'win' : 'lose'}">
             ${isWin ? '✨ VICTORY ✨' : '💀 DEFEAT 💀'}
             <span class="delta">${fmtDelta(r.capCoinDelta)} Cap Coins (${r.multiplier || 1}× multiplier)</span>
+            ${burnBeat}
         </div>
     `;
 }

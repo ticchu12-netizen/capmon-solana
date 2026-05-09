@@ -12,7 +12,10 @@
 * { box-sizing: border-box; }
 
 body {
-    background: radial-gradient(ellipse at top, #1a0a2e 0%, #0a0e1a 60%);
+    background:
+        radial-gradient(ellipse 900px 600px at 100% 100%, rgba(20, 241, 149, 0.06) 0%, transparent 55%),
+        radial-gradient(ellipse 900px 600px at 0% 100%, rgba(153, 69, 255, 0.07) 0%, transparent 55%),
+        radial-gradient(ellipse at top, #1a0a2e 0%, #0a0e1a 60%);
     background-attachment: fixed;
     color: #e0e0e8;
     font-family: 'JetBrains Mono', monospace;
@@ -21,9 +24,23 @@ body {
     min-height: 100vh;
 }
 
+.solana-watermark {
+    position: fixed;
+    top: 30px;
+    right: 30px;
+    width: 70px;
+    opacity: 0.14;
+    pointer-events: none;
+    z-index: 0;
+    transition: opacity 0.3s;
+}
+.solana-watermark:hover { opacity: 0.3; }
+
 .container {
     max-width: 1200px;
     margin: 0 auto;
+    position: relative;
+    z-index: 1;
 }
 
 .hero {
@@ -85,9 +102,11 @@ h1 {
     backdrop-filter: blur(10px);
     border: 1px solid #1f2942;
     border-radius: 10px;
-    padding: 22px;
+    padding: 20px 16px;
     text-align: center;
     transition: transform 0.2s, border-color 0.2s;
+    min-width: 0;
+    overflow: hidden;
 }
 
 .stat:hover {
@@ -96,10 +115,16 @@ h1 {
 }
 
 .stat .value {
-    font-size: 2.2rem;
+    font-size: clamp(1.4rem, 2.4vw, 2.2rem);
     font-weight: 600;
     color: #ffd700;
     font-family: 'JetBrains Mono', monospace;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .stat .label {
@@ -109,6 +134,8 @@ h1 {
     letter-spacing: 0.15em;
     margin-top: 6px;
 }
+
+.stat.burn .value { color: #e63d00; }
 
 .table-wrap {
     background: rgba(20, 24, 42, 0.4);
@@ -121,7 +148,7 @@ h1 {
 table {
     width: 100%;
     border-collapse: collapse;
-    min-width: 700px;
+    min-width: 760px;
 }
 
 th {
@@ -184,6 +211,14 @@ tbody tr:last-child td {
     margin-left: 6px;
 }
 
+.burn-cell {
+    color: #e63d00;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.burn-cell.empty { color: #444; font-weight: 400; }
+
 .wallet {
     font-size: 0.85rem;
     color: #c0c0c8;
@@ -236,6 +271,29 @@ tbody tr:last-child td {
     border-bottom-color: #00f0ff;
 }
 
+.solana-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 14px;
+    background: linear-gradient(135deg, rgba(153, 69, 255, 0.1), rgba(20, 241, 149, 0.1));
+    border: 1px solid rgba(153, 69, 255, 0.3);
+    border-radius: 20px;
+    font-size: 0.7rem;
+    color: #c0c0c8;
+    margin-top: 16px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+.solana-badge svg { flex-shrink: 0; }
+.solana-badge .label {
+    background: linear-gradient(90deg, #9945FF, #14F195);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 600;
+}
+
 .pulse {
     width: 8px;
     height: 8px;
@@ -258,10 +316,24 @@ tbody tr:last-child td {
     .stat .value { font-size: 1.6rem; }
     th, td { padding: 10px 12px; font-size: 0.8rem; }
     .what-this-is { padding: 15px; font-size: 0.82rem; }
+    .solana-watermark { width: 50px; top: 15px; right: 15px; opacity: 0.1; }
 }
 </style>
 </head>
 <body>
+
+<svg class="solana-watermark" viewBox="0 0 100 80" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <defs>
+        <linearGradient id="solWmGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#9945FF"/>
+            <stop offset="100%" stop-color="#14F195"/>
+        </linearGradient>
+    </defs>
+    <path d="M15 12 L92 12 L80 24 L3 24 Z" fill="url(#solWmGrad)"/>
+    <path d="M3 35 L80 35 L92 47 L15 47 Z" fill="url(#solWmGrad)"/>
+    <path d="M15 58 L92 58 L80 70 L3 70 Z" fill="url(#solWmGrad)"/>
+</svg>
+
 <div class="container">
 
 <div class="hero">
@@ -270,7 +342,7 @@ tbody tr:last-child td {
 </div>
 
 <div class="what-this-is">
-    <strong>What you're looking at:</strong> The Capmon staking program enforces tier-locked, monotonic brain progression on Solana. Each row below is a real transaction containing two instructions: an <code>Ed25519SigVerify</code> precompile call signed by the registered upgrade authority, and a <code>capmon-staking::upgrade_brain_v2</code> instruction that reads the signature out of the instructions sysvar and validates signer + asset + steps + freshness. No admin signature on the transaction itself — the on-chain verifier does all the work. This is Pattern 2 sigverify-ix introspection. <a href="https://github.com/ticchu12-netizen/capmon-solana" style="color: #00f0ff;">See the implementation</a>.
+    <strong>What you're looking at:</strong> The Capmon staking program enforces tier-locked, monotonic brain progression on Solana. Each row below is a real transaction containing two instructions: an <code>Ed25519SigVerify</code> precompile call signed by the registered upgrade authority, and a <code>capmon-staking::upgrade_brain_v2</code> instruction that reads the signature out of the instructions sysvar and validates signer + asset + steps + freshness. No admin signature on the transaction itself — the on-chain verifier does all the work. This is Pattern 2 sigverify-ix introspection — and as of this week, every brain upgrade burns 50% of the Capbot's battle winnings as the cost of growth, making each receipt a verifiable <strong>proof of burn</strong>. <a href="https://github.com/ticchu12-netizen/capmon-solana" style="color: #00f0ff;">See the implementation</a>.
 </div>
 
 <div class="stats">
@@ -286,6 +358,10 @@ tbody tr:last-child td {
         <div class="value" id="statCapbots">—</div>
         <div class="label">Unique Capbots</div>
     </div>
+    <div class="stat burn">
+        <div class="value" id="statBurned">—</div>
+        <div class="label">Cap Coins Burned</div>
+    </div>
 </div>
 
 <div id="content" class="loading">Loading attestations from Solana devnet…</div>
@@ -296,12 +372,26 @@ tbody tr:last-child td {
     <p>
         <a href="https://capmon.fun">capmon.fun</a> ·
         <a href="https://play.capmon.fun">Stake (Dapp)</a> ·
-        <a href="https://capmon-hackathon.web.app/actionMintStake">Mint Blink</a> ·
+        <a href="https://play.capmon.fun">Mint Blink</a> ·
         <a href="https://github.com/ticchu12-netizen/capmon-solana">GitHub</a>
     </p>
     <p style="margin-top: 12px; color: #444;">
         Anchor program <code style="background:#0a0e1a; padding:2px 6px; border-radius:3px; color:#888;">FSenbAEVTgTdfM2723xkk8A2Y5oD8wtmB2EhiWXzpqSg</code> · Solana Devnet
     </p>
+    <span class="solana-badge">
+        <svg width="14" height="11" viewBox="0 0 100 80" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <linearGradient id="solBadgeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#9945FF"/>
+                    <stop offset="100%" stop-color="#14F195"/>
+                </linearGradient>
+            </defs>
+            <path d="M15 12 L92 12 L80 24 L3 24 Z" fill="url(#solBadgeGrad)"/>
+            <path d="M3 35 L80 35 L92 47 L15 47 Z" fill="url(#solBadgeGrad)"/>
+            <path d="M15 58 L92 58 L80 70 L3 70 Z" fill="url(#solBadgeGrad)"/>
+        </svg>
+        <span class="label">Built on Solana</span>
+    </span>
 </div>
 
 </div>
@@ -350,6 +440,7 @@ async function load() {
         document.getElementById('statCount').textContent = fmtNum(data.totalCount);
         document.getElementById('statSteps').textContent = fmtNum(data.totalStepsMinted);
         document.getElementById('statCapbots').textContent = fmtNum(uniqueWallets);
+        document.getElementById('statBurned').textContent = fmtNum(data.totalCoinsBurned);
 
         if (upgrades.length === 0) {
             document.getElementById('content').innerHTML = '<div class="empty">No brain upgrades attested yet. Stake a Capmon and check back in a minute.</div>';
@@ -359,12 +450,16 @@ async function load() {
         const rows = upgrades.map(u => {
             const tier = u.tier ?? 0;
             const delta = (u.newBrainSteps || 0) - (u.oldBrainSteps || 0);
+            const burnCell = u.coinsBurned
+                ? `<td class="burn-cell">−${fmtNum(u.coinsBurned)}</td>`
+                : `<td class="burn-cell empty">—</td>`;
             return `
                 <tr>
                     <td class="timestamp">${fmtTime(u.timestamp)}</td>
                     <td class="wallet">${shortAddr(u.walletAddress)}</td>
                     <td><span class="tier-badge tier-${tier}">${TIER_EMOJI[tier]} ${TIER_NAMES[tier] || '?'}</span></td>
                     <td>${fmtNum(u.oldBrainSteps)} → ${fmtNum(u.newBrainSteps)}<span class="delta">+${fmtNum(delta)}</span></td>
+                    ${burnCell}
                     <td><a class="sig-link" href="https://solana.fm/tx/${u.txSignature}?cluster=devnet-solana" target="_blank" rel="noopener">${shortSig(u.txSignature)} ↗</a></td>
                 </tr>
             `;
@@ -379,6 +474,7 @@ async function load() {
                             <th>Wallet</th>
                             <th>Tier</th>
                             <th>Brain Steps (attested on-chain)</th>
+                            <th>Burned</th>
                             <th>Solana Transaction</th>
                         </tr>
                     </thead>

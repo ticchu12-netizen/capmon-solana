@@ -12,7 +12,10 @@
 * { box-sizing: border-box; }
 
 body {
-    background: radial-gradient(ellipse at top, #1a0a2e 0%, #0a0e1a 60%);
+    background:
+        radial-gradient(ellipse 900px 600px at 100% 100%, rgba(20, 241, 149, 0.06) 0%, transparent 55%),
+        radial-gradient(ellipse 900px 600px at 0% 100%, rgba(153, 69, 255, 0.07) 0%, transparent 55%),
+        radial-gradient(ellipse at top, #1a0a2e 0%, #0a0e1a 60%);
     background-attachment: fixed;
     color: #e0e0e8;
     font-family: 'JetBrains Mono', monospace;
@@ -21,7 +24,19 @@ body {
     min-height: 100vh;
 }
 
-.container { max-width: 1200px; margin: 0 auto; }
+.solana-watermark {
+    position: fixed;
+    top: 30px;
+    right: 30px;
+    width: 70px;
+    opacity: 0.14;
+    pointer-events: none;
+    z-index: 0;
+    transition: opacity 0.3s;
+}
+.solana-watermark:hover { opacity: 0.3; }
+
+.container { max-width: 1200px; margin: 0 auto; position: relative; z-index: 1; }
 
 .hero { text-align: center; padding: 30px 0 20px; }
 
@@ -67,18 +82,26 @@ h1 {
     backdrop-filter: blur(10px);
     border: 1px solid #1f2942;
     border-radius: 10px;
-    padding: 22px;
+    padding: 20px 14px;
     text-align: center;
     transition: transform 0.2s, border-color 0.2s;
+    min-width: 0;
+    overflow: hidden;
 }
 
 .stat:hover { transform: translateY(-2px); border-color: #ffd700; }
 
 .stat .value {
-    font-size: 2rem;
+    font-size: clamp(1.3rem, 2.4vw, 2rem);
     font-weight: 600;
     color: #ffd700;
     font-family: 'JetBrains Mono', monospace;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .stat .label {
@@ -231,6 +254,29 @@ tbody tr:last-child td { border-bottom: none; }
 }
 .footer a:hover { color: #00f0ff; border-bottom-color: #00f0ff; }
 
+.solana-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 14px;
+    background: linear-gradient(135deg, rgba(153, 69, 255, 0.1), rgba(20, 241, 149, 0.1));
+    border: 1px solid rgba(153, 69, 255, 0.3);
+    border-radius: 20px;
+    font-size: 0.7rem;
+    color: #c0c0c8;
+    margin-top: 16px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+.solana-badge svg { flex-shrink: 0; }
+.solana-badge .label {
+    background: linear-gradient(90deg, #9945FF, #14F195);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 600;
+}
+
 .pulse {
     width: 8px; height: 8px; background: #00b36b; border-radius: 50%;
     display: inline-block; margin-right: 8px;
@@ -249,10 +295,24 @@ tbody tr:last-child td { border-bottom: none; }
     .stat .value { font-size: 1.6rem; }
     th, td { padding: 10px 12px; font-size: 0.78rem; }
     .tier-bar { grid-template-columns: 80px 1fr 50px; gap: 10px; }
+    .solana-watermark { width: 50px; top: 15px; right: 15px; opacity: 0.1; }
 }
 </style>
 </head>
 <body>
+
+<svg class="solana-watermark" viewBox="0 0 100 80" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <defs>
+        <linearGradient id="solWmGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#9945FF"/>
+            <stop offset="100%" stop-color="#14F195"/>
+        </linearGradient>
+    </defs>
+    <path d="M15 12 L92 12 L80 24 L3 24 Z" fill="url(#solWmGrad)"/>
+    <path d="M3 35 L80 35 L92 47 L15 47 Z" fill="url(#solWmGrad)"/>
+    <path d="M15 58 L92 58 L80 70 L3 70 Z" fill="url(#solWmGrad)"/>
+</svg>
+
 <div class="container">
 
 <div class="hero">
@@ -267,6 +327,7 @@ tbody tr:last-child td { border-bottom: none; }
     <div class="stat"><div class="value">—</div><div class="label">Steps Attested</div></div>
     <div class="stat"><div class="value">—</div><div class="label">Cap Coins Won</div></div>
     <div class="stat"><div class="value">—</div><div class="label">Battles 24h</div></div>
+    <div class="stat"><div class="value" style="color:#e63d00;">—</div><div class="label">Cap Coins Burned</div></div>
 </div>
 
 <div class="section-label">Tier Distribution</div>
@@ -286,12 +347,26 @@ tbody tr:last-child td { border-bottom: none; }
         <a href="https://capmon.fun">capmon.fun</a> ·
         <a href="https://play.capmon.fun">Stake (Dapp)</a> ·
         <a href="/proof">On-Chain Proof</a> ·
-        <a href="https://capmon-hackathon.web.app/actionMintStake">Mint Blink</a> ·
+        <a href="https://play.capmon.fun">Mint Blink</a> ·
         <a href="https://github.com/ticchu12-netizen/capmon-solana">GitHub</a>
     </p>
     <p style="margin-top: 12px; color: #444;">
         Anchor program <code style="background:#0a0e1a; padding:2px 6px; border-radius:3px; color:#888;">FSenbAEVTgTdfM2723xkk8A2Y5oD8wtmB2EhiWXzpqSg</code> · Solana Devnet
     </p>
+    <span class="solana-badge">
+        <svg width="14" height="11" viewBox="0 0 100 80" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <linearGradient id="solBadgeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#9945FF"/>
+                    <stop offset="100%" stop-color="#14F195"/>
+                </linearGradient>
+            </defs>
+            <path d="M15 12 L92 12 L80 24 L3 24 Z" fill="url(#solBadgeGrad)"/>
+            <path d="M3 35 L80 35 L92 47 L15 47 Z" fill="url(#solBadgeGrad)"/>
+            <path d="M15 58 L92 58 L80 70 L3 70 Z" fill="url(#solBadgeGrad)"/>
+        </svg>
+        <span class="label">Built on Solana</span>
+    </span>
 </div>
 
 </div>
@@ -319,6 +394,7 @@ async function load() {
             <div class="stat"><div class="value">${fmtNum(s.totalBrainStepsAttested)}</div><div class="label">Steps Attested</div></div>
             <div class="stat"><div class="value">${fmtNum(s.totalCapCoinsDistributed)}</div><div class="label">Cap Coins Won</div></div>
             <div class="stat"><div class="value">${fmtNum(s.battlesToday)}</div><div class="label">Battles 24h</div></div>
+            <div class="stat"><div class="value" style="color:#e63d00;">${fmtNum(s.totalCoinsBurned)}</div><div class="label">Cap Coins Burned</div></div>
         `;
 
         // Tier bars
