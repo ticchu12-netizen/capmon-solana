@@ -31,6 +31,17 @@
           "functionId": "mintCapmonCnft",
           "region": "us-central1"
         }
+      },
+      { 
+        "source": "/dashboard",
+        "destination": "/dashboard.html" 
+      },
+      { "source": "/replay", 
+        "destination": "/replay.html" 
+      },
+      {
+        "source": "/proof",
+        "destination": "/proof.html"
       }
     ]
   },

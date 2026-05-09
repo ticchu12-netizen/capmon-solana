@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Capmon — On-Chain Proof of Brain Progression</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Live on-chain attestations of Capmon AI brain progression on Solana devnet.">
+<link rel="icon" href="https://i.imgur.com/sCHbEol.jpeg">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Trade+Winds&family=Lora:ital@1&family=JetBrains+Mono:wght@400;600&display=swap');
+
+* { box-sizing: border-box; }
+
+body {
+    background: radial-gradient(ellipse at top, #1a0a2e 0%, #0a0e1a 60%);
+    background-attachment: fixed;
+    color: #e0e0e8;
+    font-family: 'JetBrains Mono', monospace;
+    margin: 0;
+    padding: 40px 20px 20px;
+    min-height: 100vh;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.hero {
+    text-align: center;
+    padding: 30px 0 20px;
+}
+
+h1 {
+    font-family: 'Trade Winds', cursive;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    margin: 0;
+    background: linear-gradient(90deg, #ffd700, #00f0ff, #00b36b);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: 0.02em;
+}
+
+.subtitle {
+    font-family: 'Lora', serif;
+    font-style: italic;
+    color: #aaa;
+    max-width: 700px;
+    margin: 15px auto 0;
+    line-height: 1.6;
+    font-size: 1.05rem;
+}
+
+.what-this-is {
+    background: rgba(20, 24, 42, 0.6);
+    backdrop-filter: blur(10px);
+    border: 1px solid #1f2942;
+    border-radius: 12px;
+    padding: 20px 25px;
+    margin: 30px 0;
+    font-size: 0.9rem;
+    line-height: 1.7;
+}
+
+.what-this-is strong { color: #ffd700; }
+
+.what-this-is code {
+    background: #0a0e1a;
+    padding: 2px 6px;
+    border-radius: 3px;
+    color: #00f0ff;
+    font-size: 0.85rem;
+}
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin: 30px 0;
+}
+
+.stat {
+    background: rgba(20, 24, 42, 0.6);
+    backdrop-filter: blur(10px);
+    border: 1px solid #1f2942;
+    border-radius: 10px;
+    padding: 22px;
+    text-align: center;
+    transition: transform 0.2s, border-color 0.2s;
+}
+
+.stat:hover {
+    transform: translateY(-2px);
+    border-color: #ffd700;
+}
+
+.stat .value {
+    font-size: 2.2rem;
+    font-weight: 600;
+    color: #ffd700;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.stat .label {
+    font-size: 0.75rem;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    margin-top: 6px;
+}
+
+.table-wrap {
+    background: rgba(20, 24, 42, 0.4);
+    border: 1px solid #1f2942;
+    border-radius: 12px;
+    overflow-x: auto;
+    margin: 25px 0;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 700px;
+}
+
+th {
+    padding: 14px 18px;
+    text-align: left;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #888;
+    border-bottom: 1px solid #1f2942;
+    background: #0f1325;
+    font-weight: 600;
+}
+
+td {
+    padding: 14px 18px;
+    border-bottom: 1px solid #14182a;
+    font-size: 0.88rem;
+    vertical-align: middle;
+}
+
+tbody tr {
+    transition: background 0.1s;
+}
+
+tbody tr:hover {
+    background: rgba(20, 24, 42, 0.6);
+}
+
+tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.tier-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.tier-0 { background: rgba(0, 179, 107, 0.15); color: #00b36b; border: 1px solid #00b36b; }
+.tier-1 { background: rgba(0, 240, 255, 0.15); color: #00f0ff; border: 1px solid #00f0ff; }
+.tier-2 { background: rgba(230, 61, 0, 0.15); color: #e63d00; border: 1px solid #e63d00; }
+.tier-3 { background: rgba(255, 215, 0, 0.15); color: #ffd700; border: 1px solid #ffd700; }
+
+.sig-link {
+    color: #00f0ff;
+    text-decoration: none;
+    font-size: 0.85rem;
+}
+
+.sig-link:hover { text-decoration: underline; }
+
+.delta {
+    color: #00b36b;
+    font-weight: 600;
+    margin-left: 6px;
+}
+
+.wallet {
+    font-size: 0.85rem;
+    color: #c0c0c8;
+}
+
+.timestamp {
+    color: #888;
+    font-size: 0.85rem;
+    white-space: nowrap;
+}
+
+.loading, .empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: #666;
+    font-style: italic;
+}
+
+.error {
+    text-align: center;
+    padding: 40px 20px;
+    color: #e63d00;
+}
+
+.refresh-note {
+    text-align: center;
+    color: #555;
+    font-size: 0.78rem;
+    margin: 15px 0;
+    font-style: italic;
+}
+
+.footer {
+    text-align: center;
+    margin: 60px 0 20px;
+    color: #666;
+    font-size: 0.82rem;
+    line-height: 1.8;
+}
+
+.footer a {
+    color: #888;
+    text-decoration: none;
+    border-bottom: 1px dotted #555;
+    margin: 0 8px;
+}
+
+.footer a:hover {
+    color: #00f0ff;
+    border-bottom-color: #00f0ff;
+}
+
+.pulse {
+    width: 8px;
+    height: 8px;
+    background: #00b36b;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 8px;
+    box-shadow: 0 0 8px #00b36b;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.2); }
+}
+
+@media (max-width: 600px) {
+    body { padding: 20px 10px; }
+    h1 { font-size: 2rem; }
+    .stat .value { font-size: 1.6rem; }
+    th, td { padding: 10px 12px; font-size: 0.8rem; }
+    .what-this-is { padding: 15px; font-size: 0.82rem; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="hero">
+    <h1>Proof of Brain Progression</h1>
+    <p class="subtitle"><span class="pulse"></span>Every Capbot brain upgrade is signed off-chain via Ed25519 and verified on-chain by the Capmon Anchor program. The receipts below are live, devnet, public — click any signature to inspect the transaction yourself.</p>
+</div>
+
+<div class="what-this-is">
+    <strong>What you're looking at:</strong> The Capmon staking program enforces tier-locked, monotonic brain progression on Solana. Each row below is a real transaction containing two instructions: an <code>Ed25519SigVerify</code> precompile call signed by the registered upgrade authority, and a <code>capmon-staking::upgrade_brain_v2</code> instruction that reads the signature out of the instructions sysvar and validates signer + asset + steps + freshness. No admin signature on the transaction itself — the on-chain verifier does all the work. This is Pattern 2 sigverify-ix introspection. <a href="https://github.com/ticchu12-netizen/capmon-solana" style="color: #00f0ff;">See the implementation</a>.
+</div>
+
+<div class="stats">
+    <div class="stat">
+        <div class="value" id="statCount">—</div>
+        <div class="label">Total Attestations</div>
+    </div>
+    <div class="stat">
+        <div class="value" id="statSteps">—</div>
+        <div class="label">Brain Steps Attested</div>
+    </div>
+    <div class="stat">
+        <div class="value" id="statCapbots">—</div>
+        <div class="label">Unique Capbots</div>
+    </div>
+</div>
+
+<div id="content" class="loading">Loading attestations from Solana devnet…</div>
+
+<p class="refresh-note">Auto-refreshes every 30 seconds.</p>
+
+<div class="footer">
+    <p>
+        <a href="https://capmon.fun">capmon.fun</a> ·
+        <a href="https://play.capmon.fun">Stake (Dapp)</a> ·
+        <a href="https://capmon-hackathon.web.app/actionMintStake">Mint Blink</a> ·
+        <a href="https://github.com/ticchu12-netizen/capmon-solana">GitHub</a>
+    </p>
+    <p style="margin-top: 12px; color: #444;">
+        Anchor program <code style="background:#0a0e1a; padding:2px 6px; border-radius:3px; color:#888;">FSenbAEVTgTdfM2723xkk8A2Y5oD8wtmB2EhiWXzpqSg</code> · Solana Devnet
+    </p>
+</div>
+
+</div>
+
+<script>
+const TIER_NAMES = ['Evergreen', 'Aquashrine', 'Magmamine', 'King'];
+const TIER_EMOJI = ['🌿', '💧', '🔥', '👑'];
+const ENDPOINT = 'https://us-central1-capmon-world.cloudfunctions.net/getBrainUpgradeProofs';
+
+function shortAddr(s) {
+    return s ? s.slice(0, 4) + '...' + s.slice(-4) : '—';
+}
+
+function shortSig(s) {
+    return s ? s.slice(0, 8) + '...' + s.slice(-4) : '—';
+}
+
+function fmtTime(ts) {
+    if (!ts) return '—';
+    const d = new Date(ts);
+    const now = new Date();
+    const diffMs = now - d;
+    const diffMin = Math.floor(diffMs / 60000);
+    if (diffMin < 1) return 'just now';
+    if (diffMin < 60) return diffMin + 'm ago';
+    const diffHr = Math.floor(diffMin / 60);
+    if (diffHr < 24) return diffHr + 'h ago';
+    const diffDay = Math.floor(diffHr / 24);
+    return diffDay + 'd ago';
+}
+
+function fmtNum(n) {
+    if (n == null) return '0';
+    return n.toLocaleString();
+}
+
+async function load() {
+    try {
+        const resp = await fetch(ENDPOINT);
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        const data = await resp.json();
+
+        const upgrades = data.upgrades || [];
+        const uniqueWallets = new Set(upgrades.map(u => u.walletAddress).filter(Boolean)).size;
+
+        document.getElementById('statCount').textContent = fmtNum(data.totalCount);
+        document.getElementById('statSteps').textContent = fmtNum(data.totalStepsMinted);
+        document.getElementById('statCapbots').textContent = fmtNum(uniqueWallets);
+
+        if (upgrades.length === 0) {
+            document.getElementById('content').innerHTML = '<div class="empty">No brain upgrades attested yet. Stake a Capmon and check back in a minute.</div>';
+            return;
+        }
+
+        const rows = upgrades.map(u => {
+            const tier = u.tier ?? 0;
+            const delta = (u.newBrainSteps || 0) - (u.oldBrainSteps || 0);
+            return `
+                <tr>
+                    <td class="timestamp">${fmtTime(u.timestamp)}</td>
+                    <td class="wallet">${shortAddr(u.walletAddress)}</td>
+                    <td><span class="tier-badge tier-${tier}">${TIER_EMOJI[tier]} ${TIER_NAMES[tier] || '?'}</span></td>
+                    <td>${fmtNum(u.oldBrainSteps)} → ${fmtNum(u.newBrainSteps)}<span class="delta">+${fmtNum(delta)}</span></td>
+                    <td><a class="sig-link" href="https://solana.fm/tx/${u.txSignature}?cluster=devnet-solana" target="_blank" rel="noopener">${shortSig(u.txSignature)} ↗</a></td>
+                </tr>
+            `;
+        }).join('');
+
+        document.getElementById('content').innerHTML = `
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>When</th>
+                            <th>Wallet</th>
+                            <th>Tier</th>
+                            <th>Brain Steps (attested on-chain)</th>
+                            <th>Solana Transaction</th>
+                        </tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
+                </table>
+            </div>
+        `;
+    } catch (err) {
+        document.getElementById('content').innerHTML = '<div class="error">Failed to load attestations: ' + err.message + '</div>';
+    }
+}
+
+load();
+setInterval(load, 30000);
+</script>
+</body>
+</html>

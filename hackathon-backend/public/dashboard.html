@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Capmon — Live System Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Live system stats for Capmon's autonomous AI Capbots on Solana devnet.">
+<link rel="icon" href="https://i.imgur.com/sCHbEol.jpeg">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Trade+Winds&family=Lora:ital@1&family=JetBrains+Mono:wght@400;600&display=swap');
+
+* { box-sizing: border-box; }
+
+body {
+    background: radial-gradient(ellipse at top, #1a0a2e 0%, #0a0e1a 60%);
+    background-attachment: fixed;
+    color: #e0e0e8;
+    font-family: 'JetBrains Mono', monospace;
+    margin: 0;
+    padding: 40px 20px 20px;
+    min-height: 100vh;
+}
+
+.container { max-width: 1200px; margin: 0 auto; }
+
+.hero { text-align: center; padding: 30px 0 20px; }
+
+h1 {
+    font-family: 'Trade Winds', cursive;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    margin: 0;
+    background: linear-gradient(90deg, #ffd700, #00f0ff, #00b36b);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: 0.02em;
+}
+
+.subtitle {
+    font-family: 'Lora', serif;
+    font-style: italic;
+    color: #aaa;
+    max-width: 700px;
+    margin: 15px auto 0;
+    line-height: 1.6;
+    font-size: 1.05rem;
+}
+
+.section-label {
+    font-size: 0.78rem;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    margin: 40px 0 15px;
+    border-bottom: 1px solid #1f2942;
+    padding-bottom: 10px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 15px;
+}
+
+.stat {
+    background: rgba(20, 24, 42, 0.6);
+    backdrop-filter: blur(10px);
+    border: 1px solid #1f2942;
+    border-radius: 10px;
+    padding: 22px;
+    text-align: center;
+    transition: transform 0.2s, border-color 0.2s;
+}
+
+.stat:hover { transform: translateY(-2px); border-color: #ffd700; }
+
+.stat .value {
+    font-size: 2rem;
+    font-weight: 600;
+    color: #ffd700;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.stat .label {
+    font-size: 0.72rem;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-top: 6px;
+}
+
+.stat.tier-0 .value { color: #00b36b; }
+.stat.tier-1 .value { color: #00f0ff; }
+.stat.tier-2 .value { color: #e63d00; }
+.stat.tier-3 .value { color: #ffd700; }
+
+.tier-bars {
+    background: rgba(20, 24, 42, 0.4);
+    border: 1px solid #1f2942;
+    border-radius: 12px;
+    padding: 30px;
+    margin-top: 15px;
+}
+
+.tier-bar {
+    display: grid;
+    grid-template-columns: 130px 1fr 60px;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.tier-bar:last-child { margin-bottom: 0; }
+
+.tier-bar .name {
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.tier-bar .track {
+    height: 24px;
+    background: #0a0e1a;
+    border-radius: 6px;
+    overflow: hidden;
+    position: relative;
+}
+
+.tier-bar .fill {
+    height: 100%;
+    border-radius: 6px;
+    transition: width 0.6s ease-out;
+    box-shadow: 0 0 12px currentColor;
+}
+
+.tier-bar.tier-0 .fill { background: #00b36b; color: #00b36b; }
+.tier-bar.tier-1 .fill { background: #00f0ff; color: #00f0ff; }
+.tier-bar.tier-2 .fill { background: #e63d00; color: #e63d00; }
+.tier-bar.tier-3 .fill { background: #ffd700; color: #ffd700; }
+
+.tier-bar.tier-0 .name { color: #00b36b; }
+.tier-bar.tier-1 .name { color: #00f0ff; }
+.tier-bar.tier-2 .name { color: #e63d00; }
+.tier-bar.tier-3 .name { color: #ffd700; }
+
+.tier-bar .count {
+    text-align: right;
+    font-weight: 600;
+    color: #e0e0e8;
+}
+
+.table-wrap {
+    background: rgba(20, 24, 42, 0.4);
+    border: 1px solid #1f2942;
+    border-radius: 12px;
+    overflow-x: auto;
+    margin-top: 15px;
+}
+
+table { width: 100%; border-collapse: collapse; min-width: 600px; }
+
+th {
+    padding: 14px 18px;
+    text-align: left;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: #888;
+    border-bottom: 1px solid #1f2942;
+    background: #0f1325;
+    font-weight: 600;
+}
+
+td {
+    padding: 14px 18px;
+    border-bottom: 1px solid #14182a;
+    font-size: 0.88rem;
+    vertical-align: middle;
+}
+
+tbody tr:hover { background: rgba(20, 24, 42, 0.6); }
+tbody tr:last-child td { border-bottom: none; }
+
+.tier-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 4px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.tier-badge.tier-0 { background: rgba(0, 179, 107, 0.15); color: #00b36b; border: 1px solid #00b36b; }
+.tier-badge.tier-1 { background: rgba(0, 240, 255, 0.15); color: #00f0ff; border: 1px solid #00f0ff; }
+.tier-badge.tier-2 { background: rgba(230, 61, 0, 0.15); color: #e63d00; border: 1px solid #e63d00; }
+.tier-badge.tier-3 { background: rgba(255, 215, 0, 0.15); color: #ffd700; border: 1px solid #ffd700; }
+
+.rank {
+    color: #888;
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+.rank-1 { color: #ffd700; }
+.rank-2 { color: #c0c0c8; }
+.rank-3 { color: #cd7f32; }
+
+.wallet { font-size: 0.85rem; color: #c0c0c8; }
+.coin-amount { color: #00b36b; font-weight: 600; }
+.brain-amount { color: #00f0ff; font-weight: 600; }
+
+.loading, .empty {
+    text-align: center; padding: 60px 20px;
+    color: #666; font-style: italic;
+}
+.error {
+    text-align: center; padding: 40px 20px; color: #e63d00;
+}
+.refresh-note {
+    text-align: center; color: #555; font-size: 0.78rem;
+    margin: 15px 0; font-style: italic;
+}
+
+.footer {
+    text-align: center; margin: 60px 0 20px;
+    color: #666; font-size: 0.82rem; line-height: 1.8;
+}
+.footer a {
+    color: #888; text-decoration: none;
+    border-bottom: 1px dotted #555; margin: 0 8px;
+}
+.footer a:hover { color: #00f0ff; border-bottom-color: #00f0ff; }
+
+.pulse {
+    width: 8px; height: 8px; background: #00b36b; border-radius: 50%;
+    display: inline-block; margin-right: 8px;
+    box-shadow: 0 0 8px #00b36b;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.2); }
+}
+
+@media (max-width: 600px) {
+    body { padding: 20px 10px; }
+    h1 { font-size: 2rem; }
+    .stat .value { font-size: 1.6rem; }
+    th, td { padding: 10px 12px; font-size: 0.78rem; }
+    .tier-bar { grid-template-columns: 80px 1fr 50px; gap: 10px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="hero">
+    <h1>Live System Dashboard</h1>
+    <p class="subtitle"><span class="pulse"></span>Capmon's autonomous Capbot fleet, on Solana devnet, in real time. Updates every 30 seconds.</p>
+</div>
+
+<div class="section-label">System Status</div>
+<div class="stats-grid" id="systemStats">
+    <div class="stat"><div class="value">—</div><div class="label">Active Capbots</div></div>
+    <div class="stat"><div class="value">—</div><div class="label">Brain Upgrades</div></div>
+    <div class="stat"><div class="value">—</div><div class="label">Steps Attested</div></div>
+    <div class="stat"><div class="value">—</div><div class="label">Cap Coins Won</div></div>
+    <div class="stat"><div class="value">—</div><div class="label">Battles 24h</div></div>
+</div>
+
+<div class="section-label">Tier Distribution</div>
+<div class="tier-bars" id="tierBars">
+    <div class="loading">Loading…</div>
+</div>
+
+<div class="section-label">Top Capbots Leaderboard</div>
+<div id="leaderboardWrap">
+    <div class="loading">Loading…</div>
+</div>
+
+<p class="refresh-note">Auto-refreshes every 30 seconds.</p>
+
+<div class="footer">
+    <p>
+        <a href="https://capmon.fun">capmon.fun</a> ·
+        <a href="https://play.capmon.fun">Stake (Dapp)</a> ·
+        <a href="/proof">On-Chain Proof</a> ·
+        <a href="https://capmon-hackathon.web.app/actionMintStake">Mint Blink</a> ·
+        <a href="https://github.com/ticchu12-netizen/capmon-solana">GitHub</a>
+    </p>
+    <p style="margin-top: 12px; color: #444;">
+        Anchor program <code style="background:#0a0e1a; padding:2px 6px; border-radius:3px; color:#888;">FSenbAEVTgTdfM2723xkk8A2Y5oD8wtmB2EhiWXzpqSg</code> · Solana Devnet
+    </p>
+</div>
+
+</div>
+
+<script>
+const TIER_NAMES = ['Evergreen', 'Aquashrine', 'Magmamine', 'King'];
+const TIER_EMOJI = ['🌿', '💧', '🔥', '👑'];
+const TIER_MULT = [1.0, 1.4, 1.9, 2.8];
+const ENDPOINT = 'https://us-central1-capmon-world.cloudfunctions.net/getDashboardStats';
+
+function shortAddr(s) { return s ? s.slice(0,4) + '...' + s.slice(-4) : '—'; }
+function fmtNum(n) { return (n == null) ? '0' : n.toLocaleString(); }
+
+async function load() {
+    try {
+        const resp = await fetch(ENDPOINT);
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        const data = await resp.json();
+        const s = data.stats || {};
+
+        // Hero stats
+        document.getElementById('systemStats').innerHTML = `
+            <div class="stat"><div class="value">${fmtNum(s.activeCapbots)}</div><div class="label">Active Capbots</div></div>
+            <div class="stat"><div class="value">${fmtNum(s.totalUpgrades)}</div><div class="label">Brain Upgrades</div></div>
+            <div class="stat"><div class="value">${fmtNum(s.totalBrainStepsAttested)}</div><div class="label">Steps Attested</div></div>
+            <div class="stat"><div class="value">${fmtNum(s.totalCapCoinsDistributed)}</div><div class="label">Cap Coins Won</div></div>
+            <div class="stat"><div class="value">${fmtNum(s.battlesToday)}</div><div class="label">Battles 24h</div></div>
+        `;
+
+        // Tier bars
+        const dist = data.tierDist || [0, 0, 0, 0];
+        const max = Math.max(1, ...dist);
+        document.getElementById('tierBars').innerHTML = dist.map((count, i) => {
+            const pct = (count / max) * 100;
+            return `
+                <div class="tier-bar tier-${i}">
+                    <div class="name">${TIER_EMOJI[i]} ${TIER_NAMES[i]}</div>
+                    <div class="track"><div class="fill" style="width: ${pct}%"></div></div>
+                    <div class="count">${count}</div>
+                </div>
+            `;
+        }).join('');
+
+        // Leaderboard
+        const lb = data.leaderboard || [];
+        if (lb.length === 0) {
+            document.getElementById('leaderboardWrap').innerHTML = '<div class="empty">No active Capbots yet. Stake one and check back.</div>';
+        } else {
+            const rows = lb.map((p, i) => {
+                const tier = p.tier ?? 0;
+                return `
+                    <tr>
+                        <td class="rank rank-${i+1}">#${i+1}</td>
+                        <td class="wallet">${shortAddr(p.wallet)}</td>
+                        <td><span class="tier-badge tier-${tier}">${TIER_EMOJI[tier]} ${TIER_NAMES[tier]}</span> <span style="color:#888; font-size:0.78rem;">(${TIER_MULT[tier]}×)</span></td>
+                        <td class="brain-amount">${fmtNum(p.brainSteps)}</td>
+                        <td class="coin-amount">${fmtNum(p.totalWon)}</td>
+                    </tr>
+                `;
+            }).join('');
+            document.getElementById('leaderboardWrap').innerHTML = `
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Wallet</th>
+                                <th>Tier</th>
+                                <th>Brain Steps</th>
+                                <th>Total Won</th>
+                            </tr>
+                        </thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                </div>
+            `;
+        }
+    } catch (err) {
+        document.getElementById('systemStats').innerHTML = '<div class="error">Failed to load: ' + err.message + '</div>';
+    }
+}
+
+load();
+setInterval(load, 30000);
+</script>
+</body>
+</html>
