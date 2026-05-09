@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Capmon — Battle Replay</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Turn-by-turn playback of Capmon ONNX battles, proving the brain makes real strategic decisions.">
+<link rel="icon" href="https://i.imgur.com/sCHbEol.jpeg">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Trade+Winds&family=Lora:ital@1&family=JetBrains+Mono:wght@400;600&display=swap');
+
+* { box-sizing: border-box; }
+
+body {
+    background: radial-gradient(ellipse at top, #1a0a2e 0%, #0a0e1a 60%);
+    background-attachment: fixed;
+    color: #e0e0e8;
+    font-family: 'JetBrains Mono', monospace;
+    margin: 0;
+    padding: 30px 20px 20px;
+    min-height: 100vh;
+}
+
+.container { max-width: 1100px; margin: 0 auto; }
+
+.hero { text-align: center; padding: 20px 0 10px; }
+
+h1 {
+    font-family: 'Trade Winds', cursive;
+    font-size: clamp(1.8rem, 4vw, 3rem);
+    margin: 0;
+    background: linear-gradient(90deg, #ffd700, #00f0ff, #00b36b);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.subtitle {
+    font-family: 'Lora', serif;
+    font-style: italic;
+    color: #aaa;
+    margin: 10px auto 0;
+    max-width: 700px;
+    line-height: 1.6;
+    font-size: 0.95rem;
+}
+
+.section-label {
+    font-size: 0.78rem;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    margin: 30px 0 15px;
+    border-bottom: 1px solid #1f2942;
+    padding-bottom: 8px;
+}
+
+/* ============ ARENA (single replay mode) ============ */
+.arena {
+    background: rgba(20, 24, 42, 0.5);
+    backdrop-filter: blur(10px);
+    border: 1px solid #1f2942;
+    border-radius: 16px;
+    padding: 30px;
+    margin-top: 15px;
+}
+
+.battle-meta {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 15px;
+    margin-bottom: 25px;
+    font-size: 0.82rem;
+}
+
+.meta-item .label {
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 0.7rem;
+    margin-bottom: 4px;
+}
+
+.meta-item .val { color: #c0c0c8; font-weight: 600; }
+
+.combat-row {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 20px;
+    align-items: center;
+    margin: 25px 0;
+}
+
+@media (max-width: 700px) {
+    .combat-row { grid-template-columns: 1fr; gap: 15px; }
+    .vs-label { order: 2; text-align: center; }
+}
+
+.combatant {
+    background: rgba(15, 19, 37, 0.6);
+    border: 2px solid #1f2942;
+    border-radius: 12px;
+    padding: 22px;
+    transition: transform 0.2s, border-color 0.3s, box-shadow 0.3s;
+}
+
+.combatant.capbot.tier-0 { border-color: #00b36b; box-shadow: 0 0 20px rgba(0,179,107,0.2); }
+.combatant.capbot.tier-1 { border-color: #00f0ff; box-shadow: 0 0 20px rgba(0,240,255,0.2); }
+.combatant.capbot.tier-2 { border-color: #e63d00; box-shadow: 0 0 20px rgba(230,61,0,0.2); }
+.combatant.capbot.tier-3 { border-color: #ffd700; box-shadow: 0 0 20px rgba(255,215,0,0.2); }
+
+.combatant.opponent { border-color: #555; }
+
+.combatant.hit {
+    animation: shake 0.4s;
+}
+
+.combatant.crit-hit {
+    animation: critFlash 0.6s;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-6px); }
+    40% { transform: translateX(6px); }
+    60% { transform: translateX(-4px); }
+    80% { transform: translateX(4px); }
+}
+
+@keyframes critFlash {
+    0%, 100% { transform: scale(1); filter: brightness(1); }
+    30% { transform: scale(1.04); filter: brightness(1.6) saturate(1.4); }
+    60% { transform: scale(1); filter: brightness(1.2); }
+}
+
+.combatant.defeated {
+    opacity: 0.4;
+    filter: grayscale(0.6);
+}
+
+.combatant-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.combatant-emoji { font-size: 2rem; }
+.combatant-name { font-size: 1.2rem; font-weight: 600; }
+.combatant-role {
+    font-size: 0.7rem;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+.tier-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-left: 6px;
+}
+
+.tier-0 .tier-badge { background: rgba(0, 179, 107, 0.2); color: #00b36b; border: 1px solid #00b36b; }
+.tier-1 .tier-badge { background: rgba(0, 240, 255, 0.2); color: #00f0ff; border: 1px solid #00f0ff; }
+.tier-2 .tier-badge { background: rgba(230, 61, 0, 0.2); color: #e63d00; border: 1px solid #e63d00; }
+.tier-3 .tier-badge { background: rgba(255, 215, 0, 0.2); color: #ffd700; border: 1px solid #ffd700; }
+
+.hp-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.78rem;
+    color: #888;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.hp-bar-track {
+    height: 18px;
+    background: #050810;
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid #1f2942;
+}
+
+.hp-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #00b36b, #00f0ff);
+    transition: width 0.6s ease-out, background 0.3s;
+    box-shadow: 0 0 8px rgba(0, 240, 255, 0.4);
+}
+
+.hp-bar-fill.low {
+    background: linear-gradient(90deg, #e63d00, #ffd700);
+    box-shadow: 0 0 10px rgba(230, 61, 0, 0.5);
+}
+
+.last-move {
+    margin-top: 12px;
+    font-size: 0.85rem;
+    color: #aaa;
+    min-height: 1.4em;
+}
+
+.last-move .move-name {
+    color: #00f0ff;
+    font-weight: 600;
+}
+
+.last-move .crit-tag {
+    display: inline-block;
+    background: #ffd700;
+    color: #0a0e1a;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 1px 7px;
+    border-radius: 3px;
+    margin-left: 8px;
+    letter-spacing: 0.05em;
+}
+
+.dmg-pop {
+    color: #e63d00;
+    font-weight: 600;
+    margin-left: 4px;
+}
+
+.vs-label {
+    font-family: 'Trade Winds', cursive;
+    font-size: 1.6rem;
+    color: #555;
+    text-align: center;
+}
+
+/* ============ controls ============ */
+.controls {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin: 25px 0 15px;
+    flex-wrap: wrap;
+}
+
+.btn {
+    background: rgba(20, 24, 42, 0.6);
+    color: #e0e0e8;
+    border: 1px solid #1f2942;
+    padding: 10px 18px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+}
+
+.btn:hover { border-color: #ffd700; color: #ffd700; }
+.btn.active { background: #ffd700; color: #0a0e1a; border-color: #ffd700; }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.turn-indicator {
+    text-align: center;
+    color: #888;
+    font-size: 0.85rem;
+    margin: 10px 0;
+}
+
+/* ============ outcome ============ */
+.outcome {
+    text-align: center;
+    padding: 25px;
+    border-radius: 12px;
+    margin-top: 20px;
+    font-size: 1.4rem;
+    font-family: 'Trade Winds', cursive;
+}
+
+.outcome.win {
+    background: linear-gradient(135deg, rgba(0,179,107,0.1), rgba(255,215,0,0.1));
+    color: #00b36b;
+    border: 1px solid #00b36b;
+    box-shadow: 0 0 30px rgba(0, 179, 107, 0.2);
+}
+
+.outcome.lose {
+    background: rgba(230, 61, 0, 0.1);
+    color: #e63d00;
+    border: 1px solid #e63d00;
+}
+
+.outcome .delta {
+    display: block;
+    font-size: 1.1rem;
+    color: #ffd700;
+    font-family: 'JetBrains Mono', monospace;
+    margin-top: 6px;
+}
+
+/* ============ move log ============ */
+.move-log {
+    background: rgba(15, 19, 37, 0.5);
+    border: 1px solid #1f2942;
+    border-radius: 10px;
+    padding: 15px;
+    max-height: 280px;
+    overflow-y: auto;
+    margin-top: 15px;
+    font-size: 0.82rem;
+}
+
+.move-log-entry {
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(31, 41, 66, 0.5);
+    color: #aaa;
+}
+
+.move-log-entry:last-child { border-bottom: none; }
+
+.move-log-entry.current {
+    color: #ffd700;
+    background: rgba(255, 215, 0, 0.05);
+    margin: 0 -8px;
+    padding: 6px 8px;
+    border-radius: 4px;
+}
+
+.move-log-entry .turn-num {
+    color: #555;
+    margin-right: 10px;
+    display: inline-block;
+    width: 35px;
+}
+
+.move-log-entry .actor-c { color: #00f0ff; }
+.move-log-entry .actor-o { color: #888; }
+
+/* ============ list mode ============ */
+.battle-list {
+    background: rgba(20, 24, 42, 0.4);
+    border: 1px solid #1f2942;
+    border-radius: 12px;
+    overflow-x: auto;
+    margin-top: 15px;
+}
+
+.battle-list table { width: 100%; border-collapse: collapse; min-width: 700px; }
+
+.battle-list th {
+    padding: 14px 18px;
+    text-align: left;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: #888;
+    border-bottom: 1px solid #1f2942;
+    background: #0f1325;
+    font-weight: 600;
+}
+
+.battle-list td {
+    padding: 14px 18px;
+    border-bottom: 1px solid #14182a;
+    font-size: 0.88rem;
+    vertical-align: middle;
+}
+
+.battle-list tbody tr {
+    cursor: pointer;
+    transition: background 0.1s;
+}
+
+.battle-list tbody tr:hover { background: rgba(20, 24, 42, 0.7); }
+.battle-list tbody tr:last-child td { border-bottom: none; }
+
+.result-pill {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 4px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.result-pill.win {
+    background: rgba(0, 179, 107, 0.15);
+    color: #00b36b;
+    border: 1px solid #00b36b;
+}
+
+.result-pill.lose {
+    background: rgba(230, 61, 0, 0.15);
+    color: #e63d00;
+    border: 1px solid #e63d00;
+}
+
+.delta-positive { color: #00b36b; font-weight: 600; }
+.delta-negative { color: #e63d00; font-weight: 600; }
+
+.loading, .empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: #666;
+    font-style: italic;
+}
+
+.error {
+    text-align: center;
+    padding: 40px 20px;
+    color: #e63d00;
+}
+
+.footer {
+    text-align: center;
+    margin: 60px 0 20px;
+    color: #666;
+    font-size: 0.82rem;
+    line-height: 1.8;
+}
+
+.footer a {
+    color: #888;
+    text-decoration: none;
+    border-bottom: 1px dotted #555;
+    margin: 0 8px;
+}
+
+.footer a:hover { color: #00f0ff; border-bottom-color: #00f0ff; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="hero">
+    <h1 id="pageTitle">Battle Replay</h1>
+    <p class="subtitle" id="pageSubtitle">Watch a Capmon Capbot's ONNX brain play turn-by-turn. Every move was selected by neural network inference + MCTS planning + Bayesian opponent modeling.</p>
+</div>
+
+<div id="content" class="loading">Loading…</div>
+
+<div class="footer">
+    <p>
+        <a href="https://capmon.fun">capmon.fun</a> ·
+        <a href="https://play.capmon.fun">Stake (Dapp)</a> ·
+        <a href="/proof">On-Chain Proof</a> ·
+        <a href="/dashboard">Dashboard</a> ·
+        <a href="/replay">All Replays</a> ·
+        <a href="https://github.com/ticchu12-netizen/capmon-solana">GitHub</a>
+    </p>
+</div>
+
+</div>
+
+<script>
+const TIER_NAMES = ['Evergreen', 'Aquashrine', 'Magmamine', 'King'];
+const TIER_EMOJI = ['🌿', '💧', '🔥', '👑'];
+const TIER_MULT = [1.0, 1.4, 1.9, 2.8];
+const TYPE_EMOJI = { Rageblaze: '🔥', Tsunami: '💧', Healspike: '🌿' };
+const TYPE_HP = { Rageblaze: 380, Tsunami: 400, Healspike: 350 };
+const REPLAY_ENDPOINT = 'https://us-central1-capmon-world.cloudfunctions.net/getBattleReplay';
+const LIST_ENDPOINT = 'https://us-central1-capmon-world.cloudfunctions.net/getRecentBattles';
+
+const params = new URLSearchParams(window.location.search);
+const battleId = params.get('id');
+
+function shortAddr(s) { return s ? s.slice(0,4) + '...' + s.slice(-4) : '—'; }
+function fmtNum(n) { return (n == null) ? '0' : n.toLocaleString(); }
+function fmtDelta(n) {
+    if (n == null) return '0';
+    return (n > 0 ? '+' : '') + n.toLocaleString();
+}
+function fmtTime(ts) {
+    if (!ts) return '—';
+    const d = new Date(ts);
+    const diffMin = Math.floor((Date.now() - d) / 60000);
+    if (diffMin < 1) return 'just now';
+    if (diffMin < 60) return diffMin + 'm ago';
+    const diffHr = Math.floor(diffMin / 60);
+    if (diffHr < 24) return diffHr + 'h ago';
+    return Math.floor(diffHr / 24) + 'd ago';
+}
+
+// ===== LIST MODE =====
+async function renderList() {
+    document.getElementById('pageTitle').textContent = 'Battle Replays';
+    document.getElementById('pageSubtitle').textContent = 'Every Capbot battle from the autonomous loop. Click any row to watch it play out turn-by-turn.';
+
+    try {
+        const resp = await fetch(LIST_ENDPOINT + '?limit=100');
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        const data = await resp.json();
+        const battles = data.battles || [];
+
+        if (battles.length === 0) {
+            document.getElementById('content').innerHTML = '<div class="empty">No battles yet. Wait a minute, the autonomous loop will fire one shortly.</div>';
+            return;
+        }
+
+        const rows = battles.map(b => {
+            const tier = b.capbotTier ?? 0;
+            const isWin = b.result === 'win';
+            return `
+                <tr onclick="window.location='?id=${b.battleId}'">
+                    <td>${fmtTime(b.timestamp)}</td>
+                    <td>${shortAddr(b.walletAddress)}</td>
+                    <td>${TIER_EMOJI[tier]} ${TIER_NAMES[tier]} <span style="color:#666; font-size:0.78rem;">(${b.capbotName})</span></td>
+                    <td>vs ${TYPE_EMOJI[b.opponentName] || ''} ${b.opponentName || '?'}</td>
+                    <td><span class="result-pill ${b.result}">${b.result}</span></td>
+                    <td class="${isWin ? 'delta-positive' : 'delta-negative'}">${fmtDelta(b.capCoinDelta)}</td>
+                    <td style="color:#888; font-size:0.82rem;">${b.turnCount} turns</td>
+                </tr>
+            `;
+        }).join('');
+
+        document.getElementById('content').innerHTML = `
+            <div class="battle-list">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>When</th>
+                            <th>Wallet</th>
+                            <th>Capbot</th>
+                            <th>Opponent</th>
+                            <th>Result</th>
+                            <th>Cap Coins</th>
+                            <th>Length</th>
+                        </tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
+                </table>
+            </div>
+        `;
+    } catch (err) {
+        document.getElementById('content').innerHTML = '<div class="error">Failed to load battles: ' + err.message + '</div>';
+    }
+}
+
+// ===== SINGLE REPLAY MODE =====
+let replayData = null;
+let currentTurnIdx = 0;
+let isPlaying = false;
+let playbackSpeed = 1; // ms multiplier (lower = faster)
+let playTimeout = null;
+
+async function loadReplay() {
+    document.getElementById('pageTitle').textContent = 'Battle Replay';
+
+    try {
+        const resp = await fetch(REPLAY_ENDPOINT + '?id=' + encodeURIComponent(battleId));
+        if (!resp.ok) {
+            const err = await resp.json().catch(() => ({}));
+            throw new Error(err.error || 'HTTP ' + resp.status);
+        }
+        replayData = await resp.json();
+        renderArenaShell();
+        applyTurn(0); // initial state
+        startPlayback();
+    } catch (err) {
+        document.getElementById('content').innerHTML = '<div class="error">Failed to load replay: ' + err.message + '<br><br><a href="/replay" style="color:#00f0ff;">← back to all replays</a></div>';
+    }
+}
+
+function renderArenaShell() {
+    const r = replayData;
+    const tier = r.capbotTier ?? 0;
+    const capbotMaxHp = TYPE_HP[r.capbotName] || 380;
+    const opponentMaxHp = TYPE_HP[r.opponentName] || 380;
+
+    document.getElementById('pageSubtitle').innerHTML =
+        `Battle <code style="color:#00f0ff;">${shortAddr(r.battleId)}</code> · ` +
+        `Wallet ${shortAddr(r.walletAddress)} · ${fmtTime(r.timestamp)}`;
+
+    document.getElementById('content').innerHTML = `
+        <div class="arena">
+            <div class="battle-meta">
+                <div class="meta-item"><div class="label">Capbot Tier</div><div class="val">${TIER_EMOJI[tier]} ${TIER_NAMES[tier]} (${TIER_MULT[tier]}× mult)</div></div>
+                <div class="meta-item"><div class="label">Total Turns</div><div class="val">${r.turns.length}</div></div>
+                <div class="meta-item"><div class="label">Outcome</div><div class="val" style="color:${r.result === 'win' ? '#00b36b' : '#e63d00'};">${r.result.toUpperCase()}</div></div>
+                <div class="meta-item"><div class="label">Cap Coins</div><div class="val" style="color:${r.capCoinDelta >= 0 ? '#00b36b' : '#e63d00'};">${fmtDelta(r.capCoinDelta)}</div></div>
+            </div>
+
+            <div class="combat-row">
+                <div class="combatant capbot tier-${tier}" id="capbotCard">
+                    <div class="combatant-header">
+                        <div class="combatant-emoji">${TYPE_EMOJI[r.capbotName] || '👤'}</div>
+                        <div>
+                            <div class="combatant-role">Your Capbot <span class="tier-badge">${TIER_NAMES[tier]}</span></div>
+                            <div class="combatant-name">${r.capbotName}</div>
+                        </div>
+                    </div>
+                    <div class="hp-row"><span>HP</span><span id="capbotHpText">${capbotMaxHp} / ${capbotMaxHp}</span></div>
+                    <div class="hp-bar-track"><div class="hp-bar-fill" id="capbotHpBar" style="width: 100%;"></div></div>
+                    <div class="last-move" id="capbotLastMove">&nbsp;</div>
+                </div>
+
+                <div class="vs-label">VS</div>
+
+                <div class="combatant opponent" id="opponentCard">
+                    <div class="combatant-header">
+                        <div class="combatant-emoji">${TYPE_EMOJI[r.opponentName] || '👤'}</div>
+                        <div>
+                            <div class="combatant-role">AI Opponent</div>
+                            <div class="combatant-name">${r.opponentName}</div>
+                        </div>
+                    </div>
+                    <div class="hp-row"><span>HP</span><span id="opponentHpText">${opponentMaxHp} / ${opponentMaxHp}</span></div>
+                    <div class="hp-bar-track"><div class="hp-bar-fill" id="opponentHpBar" style="width: 100%;"></div></div>
+                    <div class="last-move" id="opponentLastMove">&nbsp;</div>
+                </div>
+            </div>
+
+            <div class="turn-indicator" id="turnIndicator">Turn 0 / ${r.turns.length}</div>
+
+            <div class="controls">
+                <button class="btn" id="restartBtn">⏮ Restart</button>
+                <button class="btn" id="playBtn">⏵ Play</button>
+                <button class="btn" id="pauseBtn">⏸ Pause</button>
+                <button class="btn" id="stepBtn">⏭ Step</button>
+                <button class="btn" id="endBtn">⏩ End</button>
+                <button class="btn" id="speed05">0.5×</button>
+                <button class="btn active" id="speed1">1×</button>
+                <button class="btn" id="speed2">2×</button>
+                <button class="btn" id="speed4">4×</button>
+            </div>
+
+            <div id="outcomeArea"></div>
+
+            <div class="section-label">Move Log</div>
+            <div class="move-log" id="moveLog"></div>
+        </div>
+    `;
+
+    // Wire up controls
+    document.getElementById('restartBtn').onclick = () => { stopPlayback(); applyTurn(0); startPlayback(); };
+    document.getElementById('playBtn').onclick = startPlayback;
+    document.getElementById('pauseBtn').onclick = stopPlayback;
+    document.getElementById('stepBtn').onclick = stepOne;
+    document.getElementById('endBtn').onclick = jumpToEnd;
+    document.getElementById('speed05').onclick = () => setSpeed(0.5);
+    document.getElementById('speed1').onclick = () => setSpeed(1);
+    document.getElementById('speed2').onclick = () => setSpeed(2);
+    document.getElementById('speed4').onclick = () => setSpeed(4);
+
+    renderMoveLog();
+}
+
+function renderMoveLog() {
+    const r = replayData;
+    const entries = r.turns.map((t, i) => {
+        const cls = (i === currentTurnIdx - 1) ? 'current' : '';
+        const actor = t.attacker === 'capbot' ? '<span class="actor-c">Capbot</span>' : '<span class="actor-o">AI</span>';
+        const dmg = t.damageDealt > 0 ? `<span class="dmg-pop">${t.damageDealt} dmg</span>` : '';
+        const crit = t.isCrit ? '<span class="crit-tag">CRIT</span>' : '';
+        return `<div class="move-log-entry ${cls}"><span class="turn-num">T${i+1}</span>${actor} used <span class="move-name" style="color:#00f0ff;">${t.moveName}</span> ${dmg} ${crit}</div>`;
+    }).join('');
+    document.getElementById('moveLog').innerHTML = entries;
+}
+
+function applyTurn(turnIdx) {
+    const r = replayData;
+    currentTurnIdx = turnIdx;
+
+    if (turnIdx === 0) {
+        // initial state: full HP
+        const capbotMaxHp = TYPE_HP[r.capbotName] || 380;
+        const opponentMaxHp = TYPE_HP[r.opponentName] || 380;
+        setHp('capbot', capbotMaxHp, capbotMaxHp);
+        setHp('opponent', opponentMaxHp, opponentMaxHp);
+        document.getElementById('capbotLastMove').innerHTML = '&nbsp;';
+        document.getElementById('opponentLastMove').innerHTML = '&nbsp;';
+        document.getElementById('turnIndicator').textContent = `Turn 0 / ${r.turns.length}`;
+        document.getElementById('outcomeArea').innerHTML = '';
+        document.getElementById('capbotCard').classList.remove('hit', 'crit-hit', 'defeated');
+        document.getElementById('opponentCard').classList.remove('hit', 'crit-hit', 'defeated');
+        renderMoveLog();
+        return;
+    }
+
+    const turn = r.turns[turnIdx - 1];
+    const capbotMaxHp = TYPE_HP[r.capbotName] || 380;
+    const opponentMaxHp = TYPE_HP[r.opponentName] || 380;
+
+    setHp('capbot', turn.capbotHp, capbotMaxHp);
+    setHp('opponent', turn.opponentHp, opponentMaxHp);
+
+    const isCapbotAttacking = turn.attacker === 'capbot';
+    const moveText = `<span class="move-name">${turn.moveName}</span>` +
+        (turn.damageDealt > 0 ? `<span class="dmg-pop">${turn.damageDealt} dmg</span>` : '') +
+        (turn.isCrit ? '<span class="crit-tag">CRIT</span>' : '');
+
+    if (isCapbotAttacking) {
+        document.getElementById('capbotLastMove').innerHTML = moveText;
+        document.getElementById('opponentCard').classList.remove('hit', 'crit-hit');
+        void document.getElementById('opponentCard').offsetWidth; // reflow
+        if (turn.damageDealt > 0) {
+            document.getElementById('opponentCard').classList.add(turn.isCrit ? 'crit-hit' : 'hit');
+        }
+    } else {
+        document.getElementById('opponentLastMove').innerHTML = moveText;
+        document.getElementById('capbotCard').classList.remove('hit', 'crit-hit');
+        void document.getElementById('capbotCard').offsetWidth;
+        if (turn.damageDealt > 0) {
+            document.getElementById('capbotCard').classList.add(turn.isCrit ? 'crit-hit' : 'hit');
+        }
+    }
+
+    if (turn.capbotHp <= 0) document.getElementById('capbotCard').classList.add('defeated');
+    if (turn.opponentHp <= 0) document.getElementById('opponentCard').classList.add('defeated');
+
+    document.getElementById('turnIndicator').textContent = `Turn ${turnIdx} / ${r.turns.length}`;
+
+    if (turnIdx === r.turns.length) {
+        showOutcome();
+    }
+    renderMoveLog();
+}
+
+function setHp(who, current, max) {
+    current = Math.max(0, current);
+    const pct = Math.max(0, Math.min(100, (current / max) * 100));
+    const bar = document.getElementById(who + 'HpBar');
+    bar.style.width = pct + '%';
+    if (pct < 30) bar.classList.add('low'); else bar.classList.remove('low');
+    document.getElementById(who + 'HpText').textContent = `${Math.floor(current)} / ${max}`;
+}
+
+function showOutcome() {
+    const r = replayData;
+    const isWin = r.result === 'win';
+    document.getElementById('outcomeArea').innerHTML = `
+        <div class="outcome ${isWin ? 'win' : 'lose'}">
+            ${isWin ? '✨ VICTORY ✨' : '💀 DEFEAT 💀'}
+            <span class="delta">${fmtDelta(r.capCoinDelta)} Cap Coins (${r.multiplier || 1}× multiplier)</span>
+        </div>
+    `;
+}
+
+function stepOne() {
+    if (currentTurnIdx >= replayData.turns.length) return;
+    applyTurn(currentTurnIdx + 1);
+}
+
+function startPlayback() {
+    if (isPlaying) return;
+    if (currentTurnIdx >= replayData.turns.length) applyTurn(0);
+    isPlaying = true;
+    document.getElementById('playBtn').classList.add('active');
+    document.getElementById('pauseBtn').classList.remove('active');
+    tick();
+}
+
+function stopPlayback() {
+    isPlaying = false;
+    if (playTimeout) { clearTimeout(playTimeout); playTimeout = null; }
+    document.getElementById('playBtn').classList.remove('active');
+    document.getElementById('pauseBtn').classList.add('active');
+}
+
+function tick() {
+    if (!isPlaying) return;
+    if (currentTurnIdx >= replayData.turns.length) { stopPlayback(); return; }
+    applyTurn(currentTurnIdx + 1);
+    playTimeout = setTimeout(tick, 1100 / playbackSpeed);
+}
+
+function jumpToEnd() {
+    stopPlayback();
+    applyTurn(replayData.turns.length);
+}
+
+function setSpeed(s) {
+    playbackSpeed = s;
+    ['speed05', 'speed1', 'speed2', 'speed4'].forEach(id => document.getElementById(id).classList.remove('active'));
+    const map = { 0.5: 'speed05', 1: 'speed1', 2: 'speed2', 4: 'speed4' };
+    document.getElementById(map[s]).classList.add('active');
+}
+
+// ===== ENTRY POINT =====
+if (battleId) {
+    loadReplay();
+} else {
+    renderList();
+}
+</script>
+</body>
+</html>
